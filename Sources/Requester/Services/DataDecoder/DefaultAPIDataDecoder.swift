@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  DefaultAPIDataDecoder.swift
 //  
 //
 //  Created by Kevin van den Hoek on 30/08/2022.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct DefaultDataDecoder: APIDataDecoder {
+public struct DefaultAPIDataDecoder: APIDataDecoder {
         
     let jsonDecoder: JSONDecoder
     
