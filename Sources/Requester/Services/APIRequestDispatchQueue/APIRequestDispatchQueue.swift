@@ -10,20 +10,24 @@ import Combine
 
 public protocol APIRequestDispatchQueue {
     
+    @discardableResult
     func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request) async throws -> (Data, URLResponse)
 }
 
 public actor DefaultAPIRequestDispatchQueue: APIRequestDispatchQueue {
     
+    public typealias HashKey = APIRequestDispatchHashable
+    
     public let urlSession: URLSession
     
-    private var requests: [HashKey: PassthroughSubject<(Data, URLResponse), Error>] = [:]
-    private var cancellables: [AnyCancellable] = []
+    private(set) var requests: [HashKey: PassthroughSubject<(Data, URLResponse), Error>] = [:]
+    private(set) var cancellables: [AnyCancellable] = []
     
     public init(urlSession: URLSession = URLSession.shared) {
         self.urlSession = urlSession
     }
     
+    @discardableResult
     public func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request) async throws -> (Data, URLResponse) {
         let key = HashKey(urlRequest, apiRequest)
         if let existing = requests[key] {
@@ -57,29 +61,5 @@ public actor DefaultAPIRequestDispatchQueue: APIRequestDispatchQueue {
                 throw error
             }
         }
-    }
-}
-
-private struct HashKey: Hashable {
-    
-    let urlRequest: URLRequest
-    let apiRequest: HashableAPIRequest
-    
-    init<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request) {
-        self.urlRequest = urlRequest
-        self.apiRequest = HashableAPIRequest(from: apiRequest)
-    }
-    
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.urlRequest == rhs.urlRequest
-            && lhs.apiRequest == rhs.apiRequest
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(urlRequest)
-        hasher.combine(apiRequest.headers)
-        hasher.combine(apiRequest.backend.baseURL) // TODO: Check if we can take all members in consideration instead of just the baseURL
-        hasher.combine(apiRequest.path)
-        hasher.combine(apiRequest.parameters as NSDictionary)
     }
 }
