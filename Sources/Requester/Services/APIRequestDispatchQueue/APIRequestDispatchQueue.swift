@@ -50,7 +50,7 @@ public actor DefaultAPIRequestDispatchQueue: APIRequestDispatchQueue {
             let subject = PassthroughSubject<(Data, URLResponse), Error>()
             requests[key] = subject
             do {
-                let result = try await urlSession.data(for: urlRequest)
+                let result = try await urlSession.data(urlRequest)
                 subject.send(result)
                 subject.send(completion: .finished)
                 requests[key] = nil
