@@ -9,11 +9,7 @@ import Foundation
 
 public protocol APIAuthenticator {
     
-    func authenticate(request: inout URLRequest) -> Result<Void, APIAuthenticatorError>
+    /// If for any reason authentication fails, return false
+    func authenticate(request: inout URLRequest) -> Bool
     func refreshToken() async throws
-}
-
-public enum APIAuthenticatorError: Error {
-    case tokenMissing
-    case tokenExpired
 }

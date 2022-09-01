@@ -30,47 +30,51 @@ public actor APIClientService: APIClient {
     
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         do {
-            var urlRequest = try urlRequestMapper.map(request)
-            
-            if let requestProcessor = request.backend.requestProcessor {
-                try requestProcessor.process(&urlRequest)
-            }
-            
-            if let authenticator = request.backend.authenticator {
-                switch authenticator.authenticate(request: &urlRequest) {
-                case .failure(let error):
-                    try await authenticator.refreshToken()
-                case .success:
-                    break
-                }
-            }
-            
-            let (data, response) = try await dispatchQueue.dispatch(urlRequest, request)
-            
-            if let responseProcessor = request.backend.responseProcessor {
-                try responseProcessor.process(response, data: data, request: request)
-            }
-            let decoder = request.decoder ?? self.decoder
-            return try decoder.decode(data)
-//        } catch let error as APIError {
-//            switch error.type {
-//            case .missingToken, .unauthorized:
-//                guard allowTokenRefresh,
-//                      let tokenRefresher = getTokenRefresher(for: request) else {
-//                    let error = error.toCMDataError()
-//                    handleAnalyticsFor(error, request: request)
-//                    throw error
-//                }
-//                try await tokenRefresher.refreshToken()
-//                return try await perform(request, allowTokenRefresh: false)
-//            default:
-//                let error = error.toCMDataError()
-//                handleAnalyticsFor(error, request: request)
-//                throw error
-//            }
-            // TODO: Implement refresh mechanic
+            return try await execute(request)
         } catch {
-            throw error
+            switch (error as? APIError)?.type {
+            case .missingToken, .unauthorized:
+                guard let authenticator = request.backend.authenticator else {
+                    throw error
+                }
+                try await authenticator.refreshToken()
+                return try await execute(request)
+            default:
+                throw error
+            }
         }
+    }
+}
+
+private extension APIClientService {
+    
+    func execute<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
+        var urlRequest = try urlRequestMapper.map(request)
+        
+        if let requestProcessor = request.backend.requestProcessor {
+            try requestProcessor.process(&urlRequest)
+        }
+        
+        if let authenticator = request.backend.authenticator {
+            guard authenticator.authenticate(request: &urlRequest) else {
+                throw APIError(type: .missingToken)
+            }
+        }
+        
+        let (data, response) = try await dispatchQueue.dispatch(urlRequest, request)
+        
+        if let responseProcessor = request.backend.responseProcessor {
+            try responseProcessor.process(response, data: data, request: request)
+        }
+        if let httpResponse = response as? HTTPURLResponse,
+            let validStatusCodes = request.validStatusCodes,
+           !validStatusCodes.contains(where: { range in range.contains(httpResponse.statusCode) }) {
+            throw APIError(type: .general, statusCode: httpResponse.statusCode, message: "statuscode did not match validStatusCodes")
+        }
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
+            throw APIError(type: .unauthorized, statusCode: httpResponse.statusCode)
+        }
+        let decoder = request.decoder ?? self.decoder
+        return try decoder.decode(data)
     }
 }
