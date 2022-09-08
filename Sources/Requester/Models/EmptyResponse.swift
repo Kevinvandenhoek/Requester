@@ -8,4 +8,4 @@
 import Foundation
 
 /// This can be used on a APIRequest when you don't care about the response data. Void is not decodable hence could not be used.
-public struct EmptyResponse { }
+public struct EmptyResponse: Codable { }
