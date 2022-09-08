@@ -25,16 +25,16 @@ public actor APIMemoryCacheService: APIMemoryCache {
     
     public init() { }
     
-    func store<Request: APIRequest, Model>(request: Request, model: Model) async {
+    public func store<Request: APIRequest, Model>(request: Request, model: Model) async {
         let key = RequestKey(for: request)
         storage[key] = StoredModel(model)
     }
     
-    func get<Request: APIRequest, Model>(request: Request) async -> Model? {
+    public func get<Request: APIRequest, Model>(request: Request) async -> Model? {
         return await get(request: request, maxLifetime: .greatestFiniteMagnitude)
     }
     
-    func get<Request: APIRequest, Model>(request: Request, maxLifetime: TimeInterval) async -> Model? {
+    public func get<Request: APIRequest, Model>(request: Request, maxLifetime: TimeInterval) async -> Model? {
         let date = Date()
         let key = RequestKey(for: request)
         guard let stored = storage[key],
@@ -46,15 +46,15 @@ public actor APIMemoryCacheService: APIMemoryCache {
         return model
     }
     
-    func clear() async {
+    public func clear() async {
         storage = [:]
     }
     
-    func clear(groups: APICachingGroup...) async {
+    public func clear(groups: APICachingGroup...) async {
         await clear(groups: groups)
     }
     
-    func clear(groups: [APICachingGroup]) async {
+    public func clear(groups: [APICachingGroup]) async {
         storage.keys.forEach({ request in
             guard request.cachingGroups.contains(where: { group in
                 return groups.map({ $0.id }).contains(group.id)
