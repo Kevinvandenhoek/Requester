@@ -11,7 +11,7 @@ public protocol APIRequest: Equatable {
     
     associatedtype Response: Decodable
     
-    var validStatusCodes: Set<Range<Int>>? { get }
+    var validStatusCodes: Set<ClosedRange<Int>>? { get }
     var parameterEncoding: ParameterEncoding { get }
     var headers: [String: String] { get }
     var method: APIMethod { get }
@@ -23,7 +23,7 @@ public protocol APIRequest: Equatable {
 }
 
 // MARK: Defaults
-extension APIRequest {
+public extension APIRequest {
     
     var validStatusCodes: Set<Range<Int>>? { nil }
     var headers: [String: String] { [:] }
@@ -35,7 +35,7 @@ extension APIRequest {
 }
 
 // MARK: Comparison
-extension APIRequest {
+public extension APIRequest {
     
     static func == (lhs: Self, rhs: Self) -> Bool {
         let lhsDict = lhs.parameters as NSDictionary

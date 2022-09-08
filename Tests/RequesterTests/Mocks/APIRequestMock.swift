@@ -18,19 +18,27 @@ public struct APIRequestMock: APIRequest {
     public let method: APIMethod
     public let path: String
     public let decoder: APIDataDecoder?
+    public let validStatusCodes: Set<ClosedRange<Int>>?
     
-    public init(parameters: [String: Any] = [:], backend: APIBackend = APIBackendMock(), cachingGroups: [APICachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: APIDataDecoder? = nil) {
+    public init(parameters: [String: Any] = [:], backend: APIBackend = APIBackendMock(), cachingGroups: [APICachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: APIDataDecoder? = nil, validStatusCodes: Set<ClosedRange<Int>>? = nil) {
         self.parameters = parameters
         self.backend = backend
         self.cachingGroups = cachingGroups
         self.method = method
         self.path = path
         self.decoder = decoder
+        self.validStatusCodes = validStatusCodes
     }
 }
 
 public struct APIRequestResponseMock: Codable, Equatable {
     public let id: String
+    
+    var toData: Data {
+        return withUnsafePointer(to: self) { p in
+            Data(bytes: p, count: MemoryLayout.size(ofValue: self))
+        }
+    }
 }
 
 public struct APICachingGroupMock: APICachingGroup {

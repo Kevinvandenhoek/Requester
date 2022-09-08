@@ -31,8 +31,8 @@ public actor APIClientService: APIClient {
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         do {
             return try await execute(request)
-        } catch {
-            switch (error as? APIError)?.type {
+        } catch let error as APIError {
+            switch error.type {
             case .missingToken, .unauthorized:
                 guard let authenticator = request.backend.authenticator else {
                     throw error
@@ -42,6 +42,8 @@ public actor APIClientService: APIClient {
             default:
                 throw error
             }
+        } catch {
+            throw error
         }
     }
 }
