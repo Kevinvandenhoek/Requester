@@ -34,6 +34,7 @@ public actor APIClientService: APIClient {
         } catch let error as APIError {
             switch error.type {
             case .missingToken, .unauthorized:
+                // TODO: Clear relevant requests and put them in the queue
                 guard let authenticator = request.backend.authenticator else {
                     throw error
                 }
