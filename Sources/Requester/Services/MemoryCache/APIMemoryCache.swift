@@ -17,11 +17,13 @@ public protocol APIMemoryCache {
     func clear(groups: [APICachingGroup]) async
 }
 
-actor APIMemoryCacheService: APIMemoryCache {
+public actor APIMemoryCacheService: APIMemoryCache {
     
     typealias RequestHash = Int
     
     private var storage: [RequestKey: StoredModel] = [:]
+    
+    public init() { }
     
     func store<Request: APIRequest, Model>(request: Request, model: Model) async {
         let key = RequestKey(for: request)
