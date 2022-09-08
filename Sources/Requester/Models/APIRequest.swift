@@ -32,6 +32,7 @@ public extension APIRequest {
     var parameterEncoding: ParameterEncoding {
         method == .get ? .url() : .json
     }
+    var decoder: APIDataDecoder? { nil }
 }
 
 // MARK: Comparison
