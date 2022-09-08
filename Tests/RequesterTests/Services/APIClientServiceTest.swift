@@ -15,7 +15,6 @@ final class APIClientServiceTest: XCTestCase {
     func test_perform_shouldRefreshTokenOn401() async throws {
         // Given
         let authenticator = APIAuthenticatorMock()
-        authenticator.stubbedAuthenticateResult = true
         let sut = makeSUT(mockResponse: { request in
             return .success((Data(), HTTPURLResponse(
                 url: request.url!,
@@ -40,7 +39,6 @@ final class APIClientServiceTest: XCTestCase {
     func test_perform_shouldNotThrowErrorOn500IfValidStatusCodesIsNil() async throws {
         // Given
         let authenticator = APIAuthenticatorMock()
-        authenticator.stubbedAuthenticateResult = true
         let sut = makeSUT(mockResponse: { request in
             let data = try! JSONEncoder().encode(APIRequestResponseMock(id: "69"))
             let response = HTTPURLResponse(
@@ -64,7 +62,6 @@ final class APIClientServiceTest: XCTestCase {
     func test_perform_shouldThrowErrorOn500IfValidStatusCodesDoesntContain500() async throws {
         // Given
         let authenticator = APIAuthenticatorMock()
-        authenticator.stubbedAuthenticateResult = true
         let sut = makeSUT(mockResponse: { request in
             return .success((Data(), HTTPURLResponse(
                 url: request.url!,
@@ -92,7 +89,7 @@ final class APIClientServiceTest: XCTestCase {
     func test_perform_shouldThrowMissingTokenIfAuthenticationFails() async throws {
         // Given
         let authenticator = APIAuthenticatorMock()
-        authenticator.stubbedAuthenticateResult = false
+        authenticator.stubbedAuthenticateResult = .failure(APIError(type: .general))
         let sut = makeSUT(mockResponse: { request in
             return .success((Data(), HTTPURLResponse(
                 url: request.url!,

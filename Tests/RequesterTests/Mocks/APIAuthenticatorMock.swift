@@ -14,14 +14,19 @@ final class APIAuthenticatorMock: APIAuthenticator {
     var invokedAuthenticateCount = 0
     var invokedAuthenticateParameters: (request: URLRequest, Void)?
     var invokedAuthenticateParametersList = [(request: URLRequest, Void)]()
-    var stubbedAuthenticateResult: Bool! = false
+    var stubbedAuthenticateResult: Result<Void, Error> = .success(())
 
-    func authenticate(request: inout URLRequest) async -> Bool {
+    func authenticate(request: inout URLRequest) async throws {
         invokedAuthenticate = true
         invokedAuthenticateCount += 1
         invokedAuthenticateParameters = (request, ())
         invokedAuthenticateParametersList.append((request, ()))
-        return stubbedAuthenticateResult
+        switch stubbedAuthenticateResult {
+        case .success:
+            break
+        case .failure(let error):
+            throw error
+        }
     }
 
     var invokedRefreshToken = false
