@@ -25,7 +25,7 @@ public protocol APIRequest: Equatable {
 // MARK: Defaults
 public extension APIRequest {
     
-    var validStatusCodes: Set<Range<Int>>? { nil }
+    var validStatusCodes: Set<ClosedRange<Int>>? { nil }
     var headers: [String: String] { [:] }
     var parameters: [String: Any] { [:] }
     var cachingGroups: [APICachingGroup] { [] }
