@@ -59,7 +59,7 @@ private extension APIClientService {
         }
         
         if let authenticator = request.backend.authenticator {
-            guard authenticator.authenticate(request: &urlRequest) else {
+            guard await authenticator.authenticate(request: &urlRequest) else {
                 throw APIError(type: .missingToken)
             }
         }

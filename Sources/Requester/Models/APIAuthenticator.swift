@@ -10,6 +10,6 @@ import Foundation
 public protocol APIAuthenticator {
     
     /// If for any reason authentication fails, return false
-    func authenticate(request: inout URLRequest) -> Bool
+    func authenticate(request: inout URLRequest) async -> Bool
     func refreshToken() async throws
 }

@@ -16,7 +16,7 @@ final class APIAuthenticatorMock: APIAuthenticator {
     var invokedAuthenticateParametersList = [(request: URLRequest, Void)]()
     var stubbedAuthenticateResult: Bool! = false
 
-    func authenticate(request: inout URLRequest) -> Bool {
+    func authenticate(request: inout URLRequest) async -> Bool {
         invokedAuthenticate = true
         invokedAuthenticateCount += 1
         invokedAuthenticateParameters = (request, ())
