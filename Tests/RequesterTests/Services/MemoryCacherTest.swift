@@ -12,11 +12,11 @@ import XCTest
 
 final class MemoryCacheTest: XCTestCase {
     
-    private var sut: APIMemoryCache!
+    private var sut: MemoryCacher!
     
     override func setUp() {
         super.setUp()
-        sut = APIMemoryCacheService()
+        sut = MemoryCacher()
     }
     
     func test_get_afterStore_shouldReturnStoredValueForSameRequest() async {
@@ -34,7 +34,7 @@ final class MemoryCacheTest: XCTestCase {
     
     func test_get_afterStore_shouldReturnNilAfterClearingRelevantUseCase() async {
         // Given
-        let cachingGroup = APICachingGroupMock(id: "1")
+        let cachingGroup = CachingGroupMock(id: "1")
         let model = APIRequestResponseMock(id: "1")
         let request = APIRequestMock(parameters: ["name": "arie"], cachingGroups: [cachingGroup])
         await sut.store(request: request, model: model)
@@ -50,9 +50,9 @@ final class MemoryCacheTest: XCTestCase {
     func test_get_afterStore_shouldReturnStoredAfterClearingIrrelevantUseCase() async {
         // Given
         let model = APIRequestResponseMock(id: "1")
-        let request = APIRequestMock(parameters: ["name": "arie"], cachingGroups: [APICachingGroupMock(id: "1")])
+        let request = APIRequestMock(parameters: ["name": "arie"], cachingGroups: [CachingGroupMock(id: "1")])
         await sut.store(request: request, model: model)
-        await sut.clear(groups: APICachingGroupMock(id: "2"))
+        await sut.clear(groups: CachingGroupMock(id: "2"))
         
         // When
         let result: APIRequestResponseMock? = await sut.get(request: request)

@@ -11,7 +11,7 @@ public struct HashableAPIRequest: Hashable {
     
     public let parameters: NSDictionary
     public let headers: [String: String]
-    public let backend: APIBackend
+    public let backend: Backend
     public let path: String
     
     public init<Request: APIRequest>(from request: Request) {

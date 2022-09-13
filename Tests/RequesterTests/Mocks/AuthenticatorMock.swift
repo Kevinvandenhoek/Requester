@@ -8,27 +8,32 @@
 import Foundation
 @testable import Requester
 
-final class APIAuthenticatorMock: APIAuthenticator {
+final class AuthenticatorMock: Authenticating {
 
     var invokedAuthenticate = false
     var invokedAuthenticateCount = 0
     var invokedAuthenticateParameters: (request: URLRequest, Void)?
     var invokedAuthenticateParametersList = [(request: URLRequest, Void)]()
-    var stubbedAuthenticateResult: Result<Void, Error> = .success(())
+    var stubbedAuthenticateResult: TokenID? = "TokenID"
 
-    func authenticate(request: inout URLRequest) async throws {
+    func authenticate(request: inout URLRequest) async -> TokenID? {
         invokedAuthenticate = true
         invokedAuthenticateCount += 1
         invokedAuthenticateParameters = (request, ())
         invokedAuthenticateParametersList.append((request, ()))
-        switch stubbedAuthenticateResult {
-        case .success:
-            break
-        case .failure(let error):
-            throw error
-        }
+        return stubbedAuthenticateResult
     }
-
+    
+    var invokedDeleteToken = false
+    var invokedDeleteTokenCount = 0
+    var mockedDeleteTokenImplementation: (() async -> Void)?
+    
+    func deleteToken() async {
+        invokedDeleteToken = true
+        invokedDeleteTokenCount += 1
+        await mockedDeleteTokenImplementation?()
+    }
+    
     var invokedRefreshToken = false
     var invokedRefreshTokenCount = 0
     var mockedRefreshTokenImplementation: (() async throws -> Void)?

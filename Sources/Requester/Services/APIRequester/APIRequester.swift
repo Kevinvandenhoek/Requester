@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  APIRequester.swift
 //  
 //
 //  Created by Kevin van den Hoek on 30/08/2022.
@@ -7,36 +7,39 @@
 
 import Foundation
 
-public protocol APIClient {
-    
-    @discardableResult func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response
-}
-
-public actor APIClientService: APIClient {
+public actor APIRequester: APIRequesting {
     
     public let urlRequestMapper: URLRequestMapper
-    public let dispatchQueue: APIRequestDispatchQueue
-    public let decoder: APIDataDecoder
+    public let dispatcher: APIRequestDispatching
+    public let decoder: DataDecoding
     
     public init(
         urlRequestMapper: URLRequestMapper = URLRequestMapper(),
-        dispatchQueue: APIRequestDispatchQueue = DefaultAPIRequestDispatchQueue(urlSession: URLSession.shared),
-        decoder: APIDataDecoder = DefaultAPIDataDecoder()
+        dispatcher: APIRequestDispatching = APIRequestDispatcher(urlSession: URLSession.shared),
+        decoder: DataDecoding = DataDecoder()
     ) {
         self.urlRequestMapper = urlRequestMapper
-        self.dispatchQueue = dispatchQueue
+        self.dispatcher = dispatcher
         self.decoder = decoder
     }
     
+    @discardableResult
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         do {
             return try await execute(request)
         } catch let error as APIError {
             switch error.type {
             case .missingToken, .unauthorized:
-                // TODO: Clear relevant requests and put them in the queue
                 guard let authenticator = request.backend.authenticator else {
                     throw error
+                }
+                await authenticator.deleteToken()
+                if case .unauthorized(let tokenId) = error.type,
+                    let tokenId = tokenId {
+                    await dispatcher.throwRequests(
+                        for: tokenId,
+                        error: APIError(type: .unauthorized(tokenId))
+                    )
                 }
                 try await authenticator.refreshToken()
                 return try await execute(request)
@@ -49,7 +52,7 @@ public actor APIClientService: APIClient {
     }
 }
 
-private extension APIClientService {
+private extension APIRequester {
     
     func execute<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         var urlRequest = try urlRequestMapper.map(request)
@@ -58,22 +61,24 @@ private extension APIClientService {
             try requestProcessor.process(&urlRequest)
         }
         
+        var tokenID: TokenID?
         if let authenticator = request.backend.authenticator {
-            try await authenticator.authenticate(request: &urlRequest)
+            tokenID = await authenticator.authenticate(request: &urlRequest)
+            guard tokenID != nil else { throw APIError(type: .missingToken) }
         }
         
-        let (data, response) = try await dispatchQueue.dispatch(urlRequest, request)
+        let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID)
         
         if let responseProcessor = request.backend.responseProcessor {
             try responseProcessor.process(response, data: data, request: request)
+        }
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
+            throw APIError(type: .unauthorized(tokenID), statusCode: httpResponse.statusCode)
         }
         if let httpResponse = response as? HTTPURLResponse,
             let validStatusCodes = request.validStatusCodes,
            !validStatusCodes.contains(where: { range in range.contains(httpResponse.statusCode) }) {
             throw APIError(type: .general, statusCode: httpResponse.statusCode, message: "statuscode did not match validStatusCodes")
-        }
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
-            throw APIError(type: .unauthorized, statusCode: httpResponse.statusCode)
         }
         let decoder = request.decoder ?? self.decoder
         return try decoder.decode(data)

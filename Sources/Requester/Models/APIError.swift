@@ -7,9 +7,9 @@
 
 import Foundation
 
-public enum APIErrorType: String {
+public enum APIErrorType: Equatable {
     case general
-    case unauthorized
+    case unauthorized(TokenID?)
     case missingToken
     case tokenFetchFailure
     case decoding

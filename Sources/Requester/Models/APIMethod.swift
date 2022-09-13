@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  APIMethod.swift
 //  
 //
 //  Created by Kevin van den Hoek on 30/08/2022.

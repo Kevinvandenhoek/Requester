@@ -9,9 +9,9 @@ import Foundation
 import XCTest
 @testable import Requester
 
-final class APIRequestDispatchQueueTest: XCTestCase {
+final class APIRequestDispatcherTest: XCTestCase {
     
-    var sut: DefaultAPIRequestDispatchQueue!
+    var sut: APIRequestDispatcher!
     let urlRequestMapper = URLRequestMapper()
     
     override func setUp() {
@@ -20,7 +20,7 @@ final class APIRequestDispatchQueueTest: XCTestCase {
         configuration.protocolClasses?.insert(TimeoutURLProtocol.self, at: 0)
         TimeoutURLProtocol.timeout = 1
         let urlSesson = URLSession(configuration: configuration)
-        sut = DefaultAPIRequestDispatchQueue(urlSession: urlSesson)
+        sut = APIRequestDispatcher(urlSession: urlSesson)
     }
     
     func test_dispatch_whenDispatchingTwoEqualRequests_shouldCombineIntoOne() async throws {
@@ -34,7 +34,7 @@ final class APIRequestDispatchQueueTest: XCTestCase {
         
         // Then
         await delay()
-        let requests = await sut.requests
+        let requests = await sut.inFlights
         XCTAssertEqual(requests.keys.count, 1)
     }
     
@@ -51,7 +51,7 @@ final class APIRequestDispatchQueueTest: XCTestCase {
         
         // Then
         await delay()
-        let requests = await self.sut.requests
+        let requests = await self.sut.inFlights
         XCTAssertEqual(requests.keys.count, 2)
     }
     
@@ -63,16 +63,17 @@ final class APIRequestDispatchQueueTest: XCTestCase {
         let urlRequestB = try urlRequestMapper.map(apiRequestB)
         
         // When
-        let _ = try? await sut.dispatch(urlRequestA, apiRequestA)
-        let _ = try? await sut.dispatch(urlRequestB, apiRequestB)
+        let _ = try? await sut.dispatch(urlRequestA, apiRequestA, tokenID: nil)
+        let _ = try? await sut.dispatch(urlRequestB, apiRequestB, tokenID: nil)
         
         // Then
-        let requests = await self.sut.requests
+        try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 * 0.1)) // Cleanup happens asynchronously and isn't awaited in the dispatch method.
+        let requests = await self.sut.inFlights
         XCTAssertEqual(requests.keys.count, 0)
     }
 }
 
-private extension APIRequestDispatchQueueTest {
+private extension APIRequestDispatcherTest {
     
     func delay(seconds: TimeInterval = 0.1) async {
         try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
@@ -80,7 +81,7 @@ private extension APIRequestDispatchQueueTest {
     
     func perform<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, completion: @escaping () -> Void) {
         Task {
-            let _ = try? await sut.dispatch(urlRequest, apiRequest)
+            let _ = try? await sut.dispatch(urlRequest, apiRequest, tokenID: nil)
             completion()
         }
     }

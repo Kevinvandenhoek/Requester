@@ -1,5 +1,5 @@
 //
-//  APIMemoryCache.swift
+//  MemoryCacher.swift
 //  
 //
 //  Created by Kevin van den Hoek on 30/08/2022.
@@ -7,17 +7,7 @@
 
 import Foundation
 
-public protocol APIMemoryCache {
-    
-    func store<Request: APIRequest, Model>(request: Request, model: Model) async
-    func get<Request: APIRequest, Model>(request: Request) async -> Model?
-    func get<Request: APIRequest, Model>(request: Request, maxLifetime: TimeInterval) async -> Model?
-    func clear() async
-    func clear(groups: APICachingGroup...) async
-    func clear(groups: [APICachingGroup]) async
-}
-
-public actor APIMemoryCacheService: APIMemoryCache {
+public actor MemoryCacher: MemoryCaching {
     
     typealias RequestHash = Int
     
@@ -50,11 +40,11 @@ public actor APIMemoryCacheService: APIMemoryCache {
         storage = [:]
     }
     
-    public func clear(groups: APICachingGroup...) async {
+    public func clear(groups: CachingGroup...) async {
         await clear(groups: groups)
     }
     
-    public func clear(groups: [APICachingGroup]) async {
+    public func clear(groups: [CachingGroup]) async {
         storage.keys.forEach({ request in
             guard request.cachingGroups.contains(where: { group in
                 return groups.map({ $0.id }).contains(group.id)
@@ -64,7 +54,7 @@ public actor APIMemoryCacheService: APIMemoryCache {
     }
 }
 
-private extension APIMemoryCacheService {
+private extension MemoryCacher {
     
     struct StoredModel {
         let model: Any
@@ -78,7 +68,7 @@ private extension APIMemoryCacheService {
     
     struct RequestKey: Hashable {
         let hashable: HashableAPIRequest
-        let cachingGroups: [APICachingGroup]
+        let cachingGroups: [CachingGroup]
         
         init<Request: APIRequest>(for request: Request) {
             hashable = HashableAPIRequest(from: request)

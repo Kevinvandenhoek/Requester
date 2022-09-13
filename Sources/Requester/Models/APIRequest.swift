@@ -17,9 +17,9 @@ public protocol APIRequest: Equatable {
     var method: APIMethod { get }
     var path: String { get }
     var parameters: [String: Any] { get }
-    var backend: APIBackend { get }
-    var decoder: APIDataDecoder? { get }
-    var cachingGroups: [APICachingGroup] { get }
+    var backend: Backend { get }
+    var decoder: DataDecoding? { get }
+    var cachingGroups: [CachingGroup] { get }
 }
 
 // MARK: Defaults
@@ -28,11 +28,11 @@ public extension APIRequest {
     var validStatusCodes: Set<ClosedRange<Int>>? { nil }
     var headers: [String: String] { [:] }
     var parameters: [String: Any] { [:] }
-    var cachingGroups: [APICachingGroup] { [] }
+    var cachingGroups: [CachingGroup] { [] }
+    var decoder: DataDecoding? { nil }
     var parameterEncoding: ParameterEncoding {
         method == .get ? .url() : .json
     }
-    var decoder: APIDataDecoder? { nil }
 }
 
 // MARK: Comparison
