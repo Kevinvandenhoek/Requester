@@ -71,6 +71,7 @@ final class InFlight {
             .sink(
                 receiveCompletion: { [weak self] completion in
                     guard let self = self else { return }
+                    guard !self.didComplete else { return }
                     Task.detached(priority: .high) { self.didComplete = true }
                     switch completion {
                     case .finished:
@@ -91,14 +92,15 @@ final class InFlight {
         return try await withUnsafeThrowingContinuation { continuation in
             subject
                 .sink(
-                        receiveCompletion: { result in
+                    receiveCompletion: { result in
                         switch result {
                         case .finished:
                             break
                         case .failure(let error):
                             continuation.resume(throwing: error)
                         }
-                    }, receiveValue: { value in
+                    },
+                    receiveValue: { value in
                         continuation.resume(returning: value)
                     }
                 )
@@ -108,6 +110,7 @@ final class InFlight {
     
     func `throw`(error: APIError) {
         subject.send(completion: .failure(error))
+        didComplete = true
         cancellables = []
     }
 }
