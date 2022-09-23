@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-  s.name             = 'APIRequester'
+  s.name             = 'Requester-Swift'
   s.version          = '0.0.16'
   s.summary          = 'A lightweight async/await and Combine based networking library.'
   s.homepage         = 'https://github.com/Kevinvandenhoek/Requester.git'
