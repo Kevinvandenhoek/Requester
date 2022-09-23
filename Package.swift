@@ -25,5 +25,6 @@ let package = Package(
         .testTarget(
             name: "RequesterTests",
             dependencies: ["Requester"]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )
