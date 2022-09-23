@@ -27,27 +27,29 @@ public actor APIRequester: APIRequesting {
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         do {
             return try await execute(request)
-        } catch let error as APIError {
-            switch error.type {
-            case .missingToken, .unauthorized:
-                guard let authenticator = request.backend.authenticator else {
-                    throw error
-                }
-                await authenticator.deleteToken()
-                if case .unauthorized(let tokenId) = error.type,
-                    let tokenId = tokenId {
-                    await dispatcher.throwRequests(
-                        for: tokenId,
-                        error: APIError(type: .unauthorized(tokenId))
-                    )
-                }
-                try await authenticator.refreshToken()
+        } catch {
+            switch (error as? APIError)?.type {
+            case .missingToken:
+                guard let authenticator = request.backend.authenticator,
+                      authenticator.shouldRefreshTokenOn401 else { throw error }
+                
+                try await authenticator.fetchToken()
+                return try await execute(request)
+            case .unauthorized(let tokenID):
+                guard let tokenID = tokenID,
+                      let authenticator = request.backend.authenticator,
+                      authenticator.shouldRefreshTokenOn401 else { throw error }
+                
+                await authenticator.deleteToken(with: tokenID)
+                await dispatcher.throwRequests(
+                    for: tokenID,
+                    error: APIError(type: .unauthorized(tokenID))
+                )
+                try await authenticator.fetchToken()
                 return try await execute(request)
             default:
                 throw error
             }
-        } catch {
-            throw error
         }
     }
 }
@@ -63,8 +65,12 @@ private extension APIRequester {
         
         var tokenID: TokenID?
         if let authenticator = request.backend.authenticator {
-            tokenID = await authenticator.authenticate(request: &urlRequest)
-            guard tokenID != nil else { throw APIError(type: .missingToken) }
+            switch await authenticator.authenticate(request: &urlRequest) {
+            case .success(let usedTokenID):
+                tokenID = usedTokenID
+            case .failure(.missingToken):
+                throw APIError(type: .missingToken)
+            }
         }
         
         let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID)
@@ -76,7 +82,7 @@ private extension APIRequester {
             throw APIError(type: .unauthorized(tokenID), statusCode: httpResponse.statusCode)
         }
         if let httpResponse = response as? HTTPURLResponse,
-            let validStatusCodes = request.validStatusCodes,
+           let validStatusCodes = request.validStatusCodes,
            !validStatusCodes.contains(where: { range in range.contains(httpResponse.statusCode) }) {
             throw APIError(type: .general, statusCode: httpResponse.statusCode, message: "statuscode did not match validStatusCodes")
         }

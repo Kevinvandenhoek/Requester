@@ -9,14 +9,16 @@ import Foundation
 @testable import Requester
 
 final class AuthenticatorMock: Authenticating {
+    
+    var shouldRefreshTokenOn401: Bool = true
 
     var invokedAuthenticate = false
     var invokedAuthenticateCount = 0
     var invokedAuthenticateParameters: (request: URLRequest, Void)?
     var invokedAuthenticateParametersList = [(request: URLRequest, Void)]()
-    var stubbedAuthenticateResult: TokenID? = "TokenID"
+    var stubbedAuthenticateResult: Result<TokenID?, AuthenticationError> = .success("TokenID")
 
-    func authenticate(request: inout URLRequest) async -> TokenID? {
+    func authenticate(request: inout URLRequest) async -> Result<TokenID?, AuthenticationError> {
         invokedAuthenticate = true
         invokedAuthenticateCount += 1
         invokedAuthenticateParameters = (request, ())
@@ -28,19 +30,19 @@ final class AuthenticatorMock: Authenticating {
     var invokedDeleteTokenCount = 0
     var mockedDeleteTokenImplementation: (() async -> Void)?
     
-    func deleteToken() async {
+    func deleteToken(with id: TokenID) async {
         invokedDeleteToken = true
         invokedDeleteTokenCount += 1
         await mockedDeleteTokenImplementation?()
     }
     
-    var invokedRefreshToken = false
-    var invokedRefreshTokenCount = 0
-    var mockedRefreshTokenImplementation: (() async throws -> Void)?
+    var invokedFetchToken = false
+    var invokedFetchTokenCount = 0
+    var mockedFetchTokenImplementation: (() async throws -> Void)?
 
-    func refreshToken() async throws {
-        invokedRefreshToken = true
-        invokedRefreshTokenCount += 1
-        try await mockedRefreshTokenImplementation?()
+    func fetchToken() async throws {
+        invokedFetchToken = true
+        invokedFetchTokenCount += 1
+        try await mockedFetchTokenImplementation?()
     }
 }

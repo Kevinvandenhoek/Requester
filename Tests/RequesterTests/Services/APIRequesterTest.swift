@@ -16,7 +16,7 @@ final class APIRequesterTest: XCTestCase {
         // Given
         let authenticator = AuthenticatorMock()
         let tokenID = "420"
-        authenticator.stubbedAuthenticateResult = tokenID
+        authenticator.stubbedAuthenticateResult = .success(tokenID)
         let sut = makeSUT(mockSetup: .responseHandler { request in
             return .success((APIRequestResponseMock(id: "69").toData, HTTPURLResponse(
                 url: request.url!,
@@ -35,7 +35,7 @@ final class APIRequesterTest: XCTestCase {
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 2)
-        XCTAssertEqual(authenticator.invokedRefreshTokenCount, 1)
+        XCTAssertEqual(authenticator.invokedFetchTokenCount, 1)
     }
     
     func test_perform_shouldNotThrowErrorOn500IfValidStatusCodesIsNil() async throws {
@@ -57,7 +57,7 @@ final class APIRequesterTest: XCTestCase {
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
-        XCTAssertEqual(authenticator.invokedRefreshTokenCount, 0)
+        XCTAssertEqual(authenticator.invokedFetchTokenCount, 0)
     }
     
     
@@ -85,16 +85,15 @@ final class APIRequesterTest: XCTestCase {
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
-        XCTAssertEqual(authenticator.invokedRefreshTokenCount, 0)
+        XCTAssertEqual(authenticator.invokedFetchTokenCount, 0)
     }
     
-    func test_perform_shouldFetchTokenIfAuthenticatorHasNoToken() async throws {
+    func test_perform_shouldFetchTokenIfMissingTokenIsReturnedAndShouldRefreshIsSetToTrue() async throws {
         // Given
         let authenticator = AuthenticatorMock()
-        authenticator.stubbedAuthenticateResult = nil
-        authenticator.mockedRefreshTokenImplementation = {
-            print("running mockedRefreshTokenImplementation")
-            authenticator.stubbedAuthenticateResult = "420"
+        authenticator.stubbedAuthenticateResult = .failure(.missingToken)
+        authenticator.mockedFetchTokenImplementation = {
+            authenticator.stubbedAuthenticateResult = .success("420")
             MockURLProtocol.setup = .responseHandler { request in
                 return .success((APIRequestResponseMock(id: "69").toData, HTTPURLResponse(
                     url: request.url!,
@@ -118,14 +117,65 @@ final class APIRequesterTest: XCTestCase {
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 2)
-        XCTAssertEqual(authenticator.invokedRefreshTokenCount, 1)
+        XCTAssertEqual(authenticator.invokedFetchTokenCount, 1)
+    }
+    
+    func test_perform_shouldNotFetchTokenIfMissingTokenIsReturnedAndShouldRefreshIsSetToFalse() async throws {
+        // Given
+        let authenticator = AuthenticatorMock()
+        authenticator.stubbedAuthenticateResult = .success("69")
+        authenticator.shouldRefreshTokenOn401 = false
+        let sut = makeSUT(mockSetup: .responseHandler { request in
+            return .success((APIRequestResponseMock(id: "420").toData, HTTPURLResponse(
+                url: request.url!,
+                statusCode: 401,
+                httpVersion: nil,
+                headerFields: nil
+            )!))
+        })
+        
+        // When
+        do {
+            try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+            XCTFail("Expect unauthorized error")
+        } catch {
+            // Then
+            XCTAssertEqual((error as? APIError)?.type, .unauthorized("69"))
+            XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
+            XCTAssertEqual(authenticator.invokedFetchTokenCount, 0)
+        }
+    }
+    
+    func test_perform_ifAutenticatorReturnsSuccessWithoutTokenID_shouldThrowErrorWithoutFetchingToken() async throws {
+        // Given
+        let authenticator = AuthenticatorMock()
+        authenticator.stubbedAuthenticateResult = .success(nil)
+        let sut = makeSUT(mockSetup: .responseHandler { request in
+            return .success((APIRequestResponseMock(id: "69").toData, HTTPURLResponse(
+                url: request.url!,
+                statusCode: 401,
+                httpVersion: nil,
+                headerFields: nil
+            )!))
+        })
+        
+        // When
+        do {
+            try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+            XCTFail("Expect unauthenticated error")
+        } catch {
+            // Then
+            XCTAssertEqual((error as? APIError)?.type, .unauthorized(nil))
+            XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
+            XCTAssertEqual(authenticator.invokedFetchTokenCount, 0)
+        }
     }
     
     func test_whenFiringMultipleEqualRequests_whenReceivingNoToken_shouldCancelAllRelatedRequests() {
         // Given
         let authenticator = AuthenticatorMock()
-        authenticator.stubbedAuthenticateResult = "4"
-        authenticator.mockedRefreshTokenImplementation = {
+        authenticator.stubbedAuthenticateResult = .success("4")
+        authenticator.mockedFetchTokenImplementation = {
             throw APIError(type: .general)
         }
         let sut = makeSUT(mockSetup: .byPath([
