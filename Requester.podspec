@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
-  s.name             = 'Requester-Swift'
-  s.version          = '0.0.18'
+  s.name             = 'Requester'
+  s.version          = '0.0.19'
   s.summary          = 'A lightweight async/await and Combine based networking library.'
   s.homepage         = 'https://github.com/Kevinvandenhoek/Requester.git'
   s.license          = { :type => 'MIT', :file => 'LICENSE.md' }
