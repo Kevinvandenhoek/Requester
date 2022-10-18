@@ -11,15 +11,18 @@ public actor APIRequester: APIRequesting {
     
     public let urlRequestMapper: URLRequestMapper
     public let dispatcher: APIRequestDispatching
+    public let memoryCacher: MemoryCaching
     public let decoder: DataDecoding
     
     public init(
         urlRequestMapper: URLRequestMapper = URLRequestMapper(),
         dispatcher: APIRequestDispatching = APIRequestDispatcher(urlSession: URLSession.shared),
+        memoryCacher: MemoryCaching = MemoryCacher(),
         decoder: DataDecoding = DataDecoder()
     ) {
         self.urlRequestMapper = urlRequestMapper
         self.dispatcher = dispatcher
+        self.memoryCacher = memoryCacher
         self.decoder = decoder
     }
     
@@ -50,6 +53,23 @@ public actor APIRequester: APIRequesting {
             default:
                 throw error
             }
+        }
+    }
+    
+    @discardableResult
+    public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
+        return try await performWithMemoryCaching(request, maxCacheLifetime: nil, mapper: mapper)
+    }
+    
+    @discardableResult
+    public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, maxCacheLifetime: TimeInterval?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
+        if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: maxCacheLifetime ?? .greatestFiniteMagnitude) {
+            return cached
+        } else {
+            let response = try await perform(request)
+            let mapped = try mapper(response)
+            await memoryCacher.store(request: request, model: mapped)
+            return mapped
         }
     }
 }
