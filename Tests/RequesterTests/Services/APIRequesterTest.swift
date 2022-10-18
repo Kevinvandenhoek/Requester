@@ -171,6 +171,31 @@ final class APIRequesterTest: XCTestCase {
         }
     }
     
+    func test_performWithMemoryCaching_shouldPassTimeoutToMemoryCacher() async throws {
+        // Given
+        let authenticator = AuthenticatorMock()
+        authenticator.stubbedAuthenticateResult = .success(nil)
+        let memoryCacherMock = MemoryCacherMock()
+        let memoryCachedItem = APIRequestResponseMock(id: "420")
+        memoryCacherMock.stubbedGetResult = memoryCachedItem
+        let sut = makeSUT(mockSetup: .responseHandler({ request in
+            return .success((APIRequestResponseMock(id: "69").toData, HTTPURLResponse(
+                url: URL(string: "about:blank")!,
+                statusCode: 200,
+                httpVersion: nil,
+                headerFields: nil
+            )!))
+        }), memoryCacher: memoryCacherMock)
+        
+        // When
+        let result = try await sut.performWithMemoryCaching(APIRequestMock(backend: BackendMock(authenticator: authenticator)), mapper: { response in
+            return response
+        })
+        
+        // Then
+        XCTAssertEqual(memoryCachedItem, result)
+    }
+    
     func test_whenFiringMultipleEqualRequests_whenReceivingNoToken_shouldCancelAllRelatedRequests() {
         // Given
         let authenticator = AuthenticatorMock()
@@ -229,13 +254,13 @@ final class APIRequesterTest: XCTestCase {
 
 private extension APIRequesterTest {
     
-    func makeSUT(mockSetup: MockURLSetup) -> APIRequesting {
+    func makeSUT(mockSetup: MockURLSetup, memoryCacher: MemoryCaching = MemoryCacher()) -> APIRequesting {
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses?.insert(MockURLProtocol.self, at: 0)
         MockURLProtocol.setup = mockSetup
         let urlSesson = URLSession(configuration: configuration)
         let queue = APIRequestDispatcher(urlSession: urlSesson)
-        let sut = APIRequester(dispatcher: queue)
+        let sut = APIRequester(dispatcher: queue, memoryCacher: memoryCacher)
         return sut
     }
 }

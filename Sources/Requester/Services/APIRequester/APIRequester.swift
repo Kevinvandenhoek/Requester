@@ -63,7 +63,7 @@ public actor APIRequester: APIRequesting {
     
     @discardableResult
     public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, maxCacheLifetime: TimeInterval?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
-        if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: maxCacheLifetime ?? .greatestFiniteMagnitude) {
+        if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: maxCacheLifetime) {
             return cached
         } else {
             let response = try await perform(request)

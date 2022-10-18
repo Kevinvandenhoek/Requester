@@ -21,14 +21,14 @@ public actor MemoryCacher: MemoryCaching {
     }
     
     public func get<Request: APIRequest, Model>(request: Request) async -> Model? {
-        return await get(request: request, maxLifetime: .greatestFiniteMagnitude)
+        return await get(request: request, maxLifetime: nil)
     }
     
-    public func get<Request: APIRequest, Model>(request: Request, maxLifetime: TimeInterval) async -> Model? {
+    public func get<Request: APIRequest, Model>(request: Request, maxLifetime: TimeInterval?) async -> Model? {
         let date = Date()
         let key = RequestKey(for: request)
         guard let stored = storage[key],
-              date.timeIntervalSince(stored.date) < maxLifetime,
+              date.timeIntervalSince(stored.date) < (maxLifetime ?? .greatestFiniteMagnitude),
               let model = stored.model as? Model else {
             storage[key] = nil
             return nil
