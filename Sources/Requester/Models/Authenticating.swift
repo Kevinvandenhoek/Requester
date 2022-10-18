@@ -24,7 +24,7 @@ public protocol Authenticating {
     var shouldRefreshTokenOn401: Bool { get }
 }
 
-extension Authenticating {
+public extension Authenticating {
     
     var shouldRefreshTokenOn401: Bool { true }
 }
