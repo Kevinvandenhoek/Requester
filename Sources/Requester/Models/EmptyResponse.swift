@@ -29,6 +29,8 @@ public struct EmptyResponse: Codable {
     // ██████░░▄░░░░░░░░░░░░░▄░░░██████████████
     // ██████░░░░░░░░░░░░░▄█▀░░▄███████████████
     // ███████▄▄░░░░░░░░░▀░░░▄▀▄███████████████
+    
+    public init() { }
 }
 
 public typealias JSONResponse = [String: Any]

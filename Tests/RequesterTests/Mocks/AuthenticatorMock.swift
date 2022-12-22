@@ -9,8 +9,6 @@ import Foundation
 @testable import Requester
 
 final class AuthenticatorMock: Authenticating {
-    
-    var shouldRefreshTokenOn401: Bool = true
 
     var invokedAuthenticate = false
     var invokedAuthenticateCount = 0
@@ -44,5 +42,15 @@ final class AuthenticatorMock: Authenticating {
         invokedFetchToken = true
         invokedFetchTokenCount += 1
         try await mockedFetchTokenImplementation?()
+    }
+    
+    var invokedShouldRefreshToken: Bool = false
+    var invokedShouldRefreshTokenCount: Int = 0
+    var mockedShouldRefreshToken: ((HTTPURLResponse, Data) -> Bool)?
+    
+    func shouldRefreshToken(response: HTTPURLResponse, data: Data) -> Bool {
+        invokedShouldRefreshToken = true
+        invokedShouldRefreshTokenCount += 1
+        return mockedShouldRefreshToken?(response, data) ?? (response.statusCode == 401)
     }
 }

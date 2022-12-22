@@ -13,20 +13,22 @@ public typealias TokenID = String
 /// An authenticator meant for URLRequest authentication.
 public protocol Authenticating {
     
-    /// Authenticate the URLRequest and return an identifier if any token is used for authentication. If a missingToken error is returned, a refreshToken call will be triggered. Simply return nil if no token is needed
+    /// Authenticate the URLRequest and return an arbitrary identifier to identify the token used for authentication. If a missingToken error is returned, a refreshToken call will be triggered. Providing an identifier for the token will ensure all existing requests using the same token will be cancelled if any token expiration is detected. These calls will then be silently retried when the token is refreshed.
     func authenticate(request: inout URLRequest) async -> Result<TokenID?, AuthenticationError>
     /// Delete the token from your storage as it has been invalidated.
     func deleteToken(with id: TokenID) async
     /// Fetch and store a new token for you to use in future 'authenticate' calls
     func fetchToken() async throws
     
-    /// If the HTTPResponse contains a 401 code, returning true here will automatically trigger a token refresh and a single retry on the previously attempted APIRequest. If the APIRequest then fails again the APIRequester will throw an error, regardless of the type of error.
-    var shouldRefreshTokenOn401: Bool { get }
+    /// The default implementation is a check if the status code is 401, in which case it will return true.
+    func shouldRefreshToken(response: HTTPURLResponse, data: Data) -> Bool
 }
 
 public extension Authenticating {
     
-    var shouldRefreshTokenOn401: Bool { true }
+    func shouldRefreshToken(response: HTTPURLResponse, data: Data) -> Bool {
+        return response.statusCode == 401
+    }
 }
 
 public enum AuthenticationError: Error {

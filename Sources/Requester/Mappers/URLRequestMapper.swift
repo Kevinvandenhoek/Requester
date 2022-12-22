@@ -34,6 +34,12 @@ private extension URLRequestMapper {
     }
     
     func setHeaders<Request: APIRequest>(on urlRequest: inout URLRequest, for apiRequest: Request) {
+        switch apiRequest.parameterEncoding {
+        case .url:
+            urlRequest.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        default:
+            urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
         apiRequest.headers.forEach({ header in
             urlRequest.setValue(header.value, forHTTPHeaderField: header.key)
         })

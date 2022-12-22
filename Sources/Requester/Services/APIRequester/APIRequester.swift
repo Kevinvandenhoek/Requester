@@ -33,21 +33,21 @@ public actor APIRequester: APIRequesting {
         } catch {
             switch (error as? APIError)?.type {
             case .missingToken:
-                guard let authenticator = request.backend.authenticator,
-                      authenticator.shouldRefreshTokenOn401 else { throw error }
+                guard let authenticator = request.backend.authenticator else { throw error }
                 
                 try await authenticator.fetchToken()
                 return try await execute(request)
-            case .unauthorized(let tokenID):
-                guard let tokenID = tokenID,
-                      let authenticator = request.backend.authenticator,
-                      authenticator.shouldRefreshTokenOn401 else { throw error }
+            case .needsTokenRefresh(let tokenID):
+                guard let authenticator = request.backend.authenticator else { throw error }
                 
-                await authenticator.deleteToken(with: tokenID)
-                await dispatcher.throwRequests(
-                    for: tokenID,
-                    error: APIError(type: .unauthorized(tokenID))
-                )
+                if let tokenID = tokenID {
+                    await authenticator.deleteToken(with: tokenID)
+                    await dispatcher.throwRequests(
+                        for: tokenID,
+                        error: APIError(type: .needsTokenRefresh(tokenID))
+                    )
+                }
+                
                 try await authenticator.fetchToken()
                 return try await execute(request)
             default:
@@ -79,8 +79,8 @@ private extension APIRequester {
     func execute<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         var urlRequest = try urlRequestMapper.map(request)
         
-        if let requestProcessor = request.backend.requestProcessor {
-            try requestProcessor.process(&urlRequest)
+        try request.backend.requestProcessors.forEach { processor in
+            try processor.process(&urlRequest)
         }
         
         var tokenID: TokenID?
@@ -95,12 +95,20 @@ private extension APIRequester {
         
         let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID)
         
-        if let responseProcessor = request.backend.responseProcessor {
-            try responseProcessor.process(response, data: data, request: request)
+        try request.backend.responseProcessors.forEach { processor in
+            try processor.process(response, data: data, request: request)
         }
-        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
-            throw APIError(type: .unauthorized(tokenID), statusCode: httpResponse.statusCode)
+        
+        if let httpResponse = response as? HTTPURLResponse,
+           let authenticator = request.backend.authenticator {
+            if authenticator.shouldRefreshToken(response: httpResponse, data: data) {
+                throw APIError(type: .needsTokenRefresh(tokenID), statusCode: httpResponse.statusCode)
+            } else if httpResponse.statusCode == 401 {
+                throw APIError(type: .unauthorized, statusCode: httpResponse.statusCode)
+            }
         }
+           
+        
         if let httpResponse = response as? HTTPURLResponse,
            let validStatusCodes = request.validStatusCodes,
            !validStatusCodes.contains(where: { range in range.contains(httpResponse.statusCode) }) {

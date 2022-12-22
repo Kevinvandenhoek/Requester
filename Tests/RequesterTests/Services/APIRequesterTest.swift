@@ -30,7 +30,7 @@ final class APIRequesterTest: XCTestCase {
         do {
             try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
         } catch {
-            XCTAssertEqual(APIErrorType.unauthorized(tokenID), (error as? APIError)?.type)
+            XCTAssertEqual(APIErrorType.needsTokenRefresh("420"), (error as? APIError)?.type)
         }
         
         // Then
@@ -124,7 +124,9 @@ final class APIRequesterTest: XCTestCase {
         // Given
         let authenticator = AuthenticatorMock()
         authenticator.stubbedAuthenticateResult = .success("69")
-        authenticator.shouldRefreshTokenOn401 = false
+        authenticator.mockedShouldRefreshToken = { _, _ in
+            return false
+        }
         let sut = makeSUT(mockSetup: .responseHandler { request in
             return .success((APIRequestResponseMock(id: "420").toData, HTTPURLResponse(
                 url: request.url!,
@@ -140,13 +142,13 @@ final class APIRequesterTest: XCTestCase {
             XCTFail("Expect unauthorized error")
         } catch {
             // Then
-            XCTAssertEqual((error as? APIError)?.type, .unauthorized("69"))
+            XCTAssertEqual((error as? APIError)?.type, .unauthorized)
             XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
             XCTAssertEqual(authenticator.invokedFetchTokenCount, 0)
         }
     }
     
-    func test_perform_ifAutenticatorReturnsSuccessWithoutTokenID_shouldThrowErrorWithoutFetchingToken() async throws {
+    func test_perform_ifAutenticatorReturnsSuccessWithoutTokenID_shouldFetchToken() async throws {
         // Given
         let authenticator = AuthenticatorMock()
         authenticator.stubbedAuthenticateResult = .success(nil)
@@ -165,9 +167,9 @@ final class APIRequesterTest: XCTestCase {
             XCTFail("Expect unauthenticated error")
         } catch {
             // Then
-            XCTAssertEqual((error as? APIError)?.type, .unauthorized(nil))
-            XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
-            XCTAssertEqual(authenticator.invokedFetchTokenCount, 0)
+            XCTAssertEqual((error as? APIError)?.type, .needsTokenRefresh(nil))
+            XCTAssertEqual(authenticator.invokedAuthenticateCount, 2)
+            XCTAssertEqual(authenticator.invokedFetchTokenCount, 1)
         }
     }
     

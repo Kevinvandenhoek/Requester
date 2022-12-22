@@ -12,13 +12,13 @@ public struct BackendMock: Backend {
     
     public let baseURL: URL
     public let authenticator: Authenticating?
-    public let requestProcessor: URLRequestProcessing?
-    public let responseProcessor: URLResponseProcessing?
+    public let requestProcessors: [URLRequestProcessing]
+    public let responseProcessors: [URLResponseProcessing]
     
-    public init(baseURL: URL = URL(string: "https://www.google.com")!, authenticator: Authenticating? = nil, requestProcessor: URLRequestProcessing? = nil, responseProcessor: URLResponseProcessing? = nil) {
+    public init(baseURL: URL = URL(string: "https://www.google.com")!, authenticator: Authenticating? = nil, requestProcessors: [URLRequestProcessing] = [], responseProcessors: [URLResponseProcessing] = []) {
         self.baseURL = baseURL
         self.authenticator = authenticator
-        self.requestProcessor = requestProcessor
-        self.responseProcessor = responseProcessor
+        self.requestProcessors = requestProcessors
+        self.responseProcessors = responseProcessors
     }
 }
