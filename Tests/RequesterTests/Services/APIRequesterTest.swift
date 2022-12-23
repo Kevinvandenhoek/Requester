@@ -28,7 +28,7 @@ final class APIRequesterTest: XCTestCase {
         
         // When
         do {
-            try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+            try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
         } catch {
             XCTAssertEqual(APIErrorType.needsTokenRefresh("420"), (error as? APIError)?.type)
         }
@@ -53,7 +53,7 @@ final class APIRequesterTest: XCTestCase {
         })
         
         // When
-        try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+        try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
@@ -76,7 +76,7 @@ final class APIRequesterTest: XCTestCase {
         // When
         do {
             try await sut.perform(APIRequestMock(
-                backend: BackendMock(authenticator: authenticator),
+                backend: .stubbed(authenticator: authenticator),
                 validStatusCodes: [200...299]
             ))
         } catch {
@@ -113,7 +113,7 @@ final class APIRequesterTest: XCTestCase {
         })
         
         // When
-        try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+        try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 2)
@@ -138,7 +138,7 @@ final class APIRequesterTest: XCTestCase {
         
         // When
         do {
-            try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+            try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
             XCTFail("Expect unauthorized error")
         } catch {
             // Then
@@ -163,7 +163,7 @@ final class APIRequesterTest: XCTestCase {
         
         // When
         do {
-            try await sut.perform(APIRequestMock(backend: BackendMock(authenticator: authenticator)))
+            try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
             XCTFail("Expect unauthenticated error")
         } catch {
             // Then
@@ -190,7 +190,7 @@ final class APIRequesterTest: XCTestCase {
         }), memoryCacher: memoryCacherMock)
         
         // When
-        let result = try await sut.performWithMemoryCaching(APIRequestMock(backend: BackendMock(authenticator: authenticator)), mapper: { response in
+        let result = try await sut.performWithMemoryCaching(APIRequestMock(backend: .stubbed(authenticator: authenticator)), mapper: { response in
             return response
         })
         
@@ -225,7 +225,7 @@ final class APIRequesterTest: XCTestCase {
         Task.detached(priority: .userInitiated) {
             do {
                 try await sut.perform(APIRequestMock(
-                    backend: BackendMock(authenticator: authenticator),
+                    backend: .stubbed(authenticator: authenticator),
                     path: "secondPath",
                     validStatusCodes: [200...299]
                 ))
@@ -237,7 +237,7 @@ final class APIRequesterTest: XCTestCase {
         Task.detached(priority: .userInitiated) {
             do {
                 try await sut.perform(APIRequestMock(
-                    backend: BackendMock(authenticator: authenticator),
+                    backend: .stubbed(authenticator: authenticator),
                     path: "firstPath",
                     validStatusCodes: [200...299]
                 ))

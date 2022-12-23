@@ -7,10 +7,17 @@
 
 import Foundation
 
-public protocol Backend {
+public struct Backend {
     
-    var baseURL: URL { get }
-    var authenticator: Authenticating? { get }
-    var requestProcessors: [URLRequestProcessing] { get }
-    var responseProcessors: [URLResponseProcessing] { get }
+    public let baseURL: URL
+    public let authenticator: Authenticating?
+    public let requestProcessors: [URLRequestProcessing]
+    public let responseProcessors: [URLResponseProcessing]
+    
+    public init(baseURL: URL, authenticator: Authenticating? = nil, requestProcessors: [URLRequestProcessing] = [], responseProcessors: [URLResponseProcessing] = []) {
+        self.baseURL = baseURL
+        self.authenticator = authenticator
+        self.requestProcessors = requestProcessors
+        self.responseProcessors = responseProcessors
+    }
 }

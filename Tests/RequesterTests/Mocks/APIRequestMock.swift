@@ -20,7 +20,7 @@ public struct APIRequestMock: APIRequest {
     public let decoder: DataDecoding?
     public let validStatusCodes: Set<ClosedRange<Int>>?
     
-    public init(parameters: [String: Any] = [:], backend: Backend = BackendMock(), cachingGroups: [CachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: DataDecoding? = nil, validStatusCodes: Set<ClosedRange<Int>>? = nil) {
+    public init(parameters: [String: Any] = [:], backend: Backend = .stubbed(), cachingGroups: [CachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: DataDecoding? = nil, validStatusCodes: Set<ClosedRange<Int>>? = nil) {
         self.parameters = parameters
         self.backend = backend
         self.cachingGroups = cachingGroups
