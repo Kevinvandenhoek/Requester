@@ -45,5 +45,6 @@ public extension APIRequest {
             && lhs.backend.baseURL == rhs.backend.baseURL
             && lhs.path == rhs.path
             && lhsDict == rhsDict
+            && lhs.parameterEncoding == rhs.parameterEncoding
     }
 }
