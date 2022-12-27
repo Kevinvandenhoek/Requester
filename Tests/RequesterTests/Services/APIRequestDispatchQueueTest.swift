@@ -13,14 +13,17 @@ final class APIRequestDispatcherTest: XCTestCase {
     
     var sut: APIRequestDispatcher!
     let urlRequestMapper = URLRequestMapper()
-    
-    override func setUp() {
-        super.setUp()
+    var urlSessionProvider: URLSessionProviderMock!
+    lazy var urlSession: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses?.insert(TimeoutURLProtocol.self, at: 0)
         TimeoutURLProtocol.timeout = 1
-        let urlSesson = URLSession(configuration: configuration)
-        sut = APIRequestDispatcher(urlSession: urlSesson)
+        return URLSession(configuration: configuration)
+    }()
+    
+    override func setUp() {
+        super.setUp()
+        sut = APIRequestDispatcher()
     }
     
     func test_dispatch_whenDispatchingTwoEqualRequests_shouldCombineIntoOne() async throws {
@@ -63,8 +66,8 @@ final class APIRequestDispatcherTest: XCTestCase {
         let urlRequestB = try urlRequestMapper.map(apiRequestB)
         
         // When
-        let _ = try? await sut.dispatch(urlRequestA, apiRequestA, tokenID: nil)
-        let _ = try? await sut.dispatch(urlRequestB, apiRequestB, tokenID: nil)
+        let _ = try? await sut.dispatch(urlRequestA, apiRequestA, tokenID: nil, urlSession: urlSession)
+        let _ = try? await sut.dispatch(urlRequestB, apiRequestB, tokenID: nil, urlSession: urlSession)
         
         // Then
         try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 * 0.1)) // Cleanup happens asynchronously and isn't awaited in the dispatch method.
@@ -81,7 +84,7 @@ private extension APIRequestDispatcherTest {
     
     func perform<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, completion: @escaping () -> Void) {
         Task {
-            let _ = try? await sut.dispatch(urlRequest, apiRequest, tokenID: nil)
+            let _ = try? await sut.dispatch(urlRequest, apiRequest, tokenID: nil, urlSession: urlSession)
             completion()
         }
     }

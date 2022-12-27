@@ -12,16 +12,12 @@ public actor APIRequestDispatcher: APIRequestDispatching {
     
     public typealias HashKey = APIRequestDispatchHashable
     
-    public let urlSession: URLSession
-    
     private(set) var inFlights: [HashKey: InFlight] = [:]
     
-    public init(urlSession: URLSession = URLSession.shared) {
-        self.urlSession = urlSession
-    }
+    public init() { }
     
     @discardableResult
-    public func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, tokenID: TokenID?) async throws -> (Data, URLResponse) {
+    public func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, tokenID: TokenID?, urlSession: URLSession) async throws -> (Data, URLResponse) {
         defer { Task { await cleanCompletedInFlights() } }
         
         let key = HashKey(urlRequest, apiRequest, tokenID: tokenID)

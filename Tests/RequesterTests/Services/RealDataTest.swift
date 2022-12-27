@@ -26,7 +26,8 @@ final class RealDataTest: XCTestCase {
             case .success:
                 XCTFail("Expected APIError")
             case .failure(let error):
-                XCTAssertEqual((error as? APIError)?.type, .general)
+                print("got error: \(error)")
+                XCTAssertEqual((error as? APIError)?.type, .general, "\(error) was not of type .general")
                 expectation.fulfill()
             }
         })

@@ -18,16 +18,14 @@ public struct APIRequestMock: APIRequest {
     public let method: APIMethod
     public let path: String
     public let decoder: DataDecoding?
-    public let validStatusCodes: Set<ClosedRange<Int>>?
     
-    public init(parameters: [String: Any] = [:], backend: Backend = .stubbed(), cachingGroups: [CachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: DataDecoding? = nil, validStatusCodes: Set<ClosedRange<Int>>? = nil) {
+    public init(parameters: [String: Any] = [:], backend: Backend = .stubbed(), cachingGroups: [CachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: DataDecoding? = nil) {
         self.parameters = parameters
         self.backend = backend
         self.cachingGroups = cachingGroups
         self.method = method
         self.path = path
         self.decoder = decoder
-        self.validStatusCodes = validStatusCodes
     }
 }
 

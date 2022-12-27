@@ -76,8 +76,7 @@ final class APIRequesterTest: XCTestCase {
         // When
         do {
             try await sut.perform(APIRequestMock(
-                backend: .stubbed(authenticator: authenticator),
-                validStatusCodes: [200...299]
+                backend: .stubbed(authenticator: authenticator)
             ))
         } catch {
             XCTAssertEqual(APIErrorType.general, (error as? APIError)?.type)
@@ -180,14 +179,14 @@ final class APIRequesterTest: XCTestCase {
         let memoryCacherMock = MemoryCacherMock()
         let memoryCachedItem = APIRequestResponseMock(id: "420")
         memoryCacherMock.stubbedGetResult = memoryCachedItem
-        let sut = makeSUT(mockSetup: .responseHandler({ request in
+        let sut = makeSUT(memoryCacher: memoryCacherMock, mockSetup: .responseHandler({ request in
             return .success((APIRequestResponseMock(id: "69").toData, HTTPURLResponse(
                 url: URL(string: "about:blank")!,
                 statusCode: 200,
                 httpVersion: nil,
                 headerFields: nil
             )!))
-        }), memoryCacher: memoryCacherMock)
+        }))
         
         // When
         let result = try await sut.performWithMemoryCaching(APIRequestMock(backend: .stubbed(authenticator: authenticator)), mapper: { response in
@@ -226,8 +225,7 @@ final class APIRequesterTest: XCTestCase {
             do {
                 try await sut.perform(APIRequestMock(
                     backend: .stubbed(authenticator: authenticator),
-                    path: "secondPath",
-                    validStatusCodes: [200...299]
+                    path: "secondPath"
                 ))
                 XCTFail("secondPath should fail")
             } catch {
@@ -238,8 +236,7 @@ final class APIRequesterTest: XCTestCase {
             do {
                 try await sut.perform(APIRequestMock(
                     backend: .stubbed(authenticator: authenticator),
-                    path: "firstPath",
-                    validStatusCodes: [200...299]
+                    path: "firstPath"
                 ))
                 XCTFail("firstPath should fail")
             } catch {
@@ -256,13 +253,14 @@ final class APIRequesterTest: XCTestCase {
 
 private extension APIRequesterTest {
     
-    func makeSUT(mockSetup: MockURLSetup, memoryCacher: MemoryCaching = MemoryCacher()) -> APIRequesting {
+    func makeSUT(memoryCacher: MemoryCaching = MemoryCacher(), mockSetup: MockURLSetup) -> APIRequesting {
+        let queue = APIRequestDispatcher()
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses?.insert(MockURLProtocol.self, at: 0)
         MockURLProtocol.setup = mockSetup
         let urlSesson = URLSession(configuration: configuration)
-        let queue = APIRequestDispatcher(urlSession: urlSesson)
-        let sut = APIRequester(dispatcher: queue, memoryCacher: memoryCacher)
+        let urlSessionProvider = URLSessionProviderMock(stubbedURLSession: urlSesson)
+        let sut = APIRequester(dispatcher: queue, memoryCacher: memoryCacher, urlSessionProvider: urlSessionProvider)
         return sut
     }
 }

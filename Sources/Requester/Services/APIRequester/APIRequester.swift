@@ -13,17 +13,20 @@ public actor APIRequester: APIRequesting {
     public let dispatcher: APIRequestDispatching
     public let memoryCacher: MemoryCaching
     public let decoder: DataDecoding
+    public let urlSessionProvider: URLSessionProviding?
     
     public init(
         urlRequestMapper: URLRequestMapper = URLRequestMapper(),
-        dispatcher: APIRequestDispatching = APIRequestDispatcher(urlSession: URLSession.shared),
+        dispatcher: APIRequestDispatching = APIRequestDispatcher(),
         memoryCacher: MemoryCaching = MemoryCacher(),
-        decoder: DataDecoding = DataDecoder()
+        decoder: DataDecoding = DataDecoder(),
+        urlSessionProvider: URLSessionProviding? = nil
     ) {
         self.urlRequestMapper = urlRequestMapper
         self.dispatcher = dispatcher
         self.memoryCacher = memoryCacher
         self.decoder = decoder
+        self.urlSessionProvider = urlSessionProvider
     }
     
     @discardableResult
@@ -93,7 +96,8 @@ private extension APIRequester {
             }
         }
         
-        let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID)
+        let urlSession = urlSessionProvider?.urlSession(for: request) ?? URLSession.shared
+        let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID, urlSession: urlSession)
         
         try request.backend.responseProcessors.forEach { processor in
             try processor.process(response, data: data, request: request)
