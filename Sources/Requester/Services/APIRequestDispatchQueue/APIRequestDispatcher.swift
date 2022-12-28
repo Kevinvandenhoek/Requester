@@ -26,7 +26,6 @@ public actor APIRequestDispatcher: APIRequestDispatching {
         } else {
             let inflight = InFlight(for: urlSession.dataTaskPublisher(for: urlRequest))
             inFlights[key] = inflight
-            print("🐛 updated to \(inFlights.count) inFlights")
             return try await inflight.attach()
         }
     }
