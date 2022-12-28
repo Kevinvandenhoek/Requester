@@ -24,16 +24,6 @@ final class AuthenticatorMock: Authenticating {
         return stubbedAuthenticateResult
     }
     
-    var invokedDeleteToken = false
-    var invokedDeleteTokenCount = 0
-    var mockedDeleteTokenImplementation: (() async -> Void)?
-    
-    func deleteToken(with id: TokenID) async {
-        invokedDeleteToken = true
-        invokedDeleteTokenCount += 1
-        await mockedDeleteTokenImplementation?()
-    }
-    
     var invokedFetchToken = false
     var invokedFetchTokenCount = 0
     var mockedFetchTokenImplementation: (() async throws -> Void)?

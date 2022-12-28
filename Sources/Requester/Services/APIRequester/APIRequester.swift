@@ -44,7 +44,6 @@ public actor APIRequester: APIRequesting {
                 guard let authenticator = request.backend.authenticator else { throw error }
                 
                 if let tokenID = tokenID {
-                    await authenticator.deleteToken(with: tokenID)
                     await dispatcher.throwRequests(
                         for: tokenID,
                         error: APIError(type: .needsTokenRefresh(tokenID))

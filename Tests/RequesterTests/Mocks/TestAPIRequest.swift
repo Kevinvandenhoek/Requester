@@ -13,6 +13,6 @@ struct TestAPIRequest: APIRequest {
     typealias Response = String
     
     var method: Requester.APIMethod { .get }
-    var path: String { "delay/1000" }
-    var backend: Requester.Backend { .stubbed(baseURL: URL(string: "https://flash-the-slow-api.herokuapp.com")!) }
+    var path: String { "1000/www.google.com" }
+    var backend: Requester.Backend { .stubbed(baseURL: URL(string: "https://deelay.me/")!) }
 }

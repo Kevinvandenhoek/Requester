@@ -15,8 +15,6 @@ public protocol Authenticating {
     
     /// Authenticate the URLRequest and return an arbitrary identifier to identify the token used for authentication. If a missingToken error is returned, a refreshToken call will be triggered. Providing an identifier for the token will ensure all existing requests using the same token will be cancelled if any token expiration is detected. These calls will then be silently retried when the token is refreshed.
     func authenticate(request: inout URLRequest) async -> Result<TokenID?, AuthenticationError>
-    /// Delete the token from your storage as it has been invalidated.
-    func deleteToken(with id: TokenID) async
     /// Fetch and store a new token for you to use in future 'authenticate' calls
     func fetchToken() async throws
     
