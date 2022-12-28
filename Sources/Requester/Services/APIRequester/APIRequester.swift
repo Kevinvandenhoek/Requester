@@ -33,17 +33,9 @@ public actor APIRequester: APIRequesting {
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         do {
             return try await execute(request)
-        } catch let error as AuthenticationError {
-            switch error {
-            case .missingToken:
-                guard let authenticator = request.backend.authenticator else { throw error }
-                
-                try await authenticator.fetchToken()
-                return try await execute(request)
-            }
         } catch let error as APIError {
             switch error.type {
-            case .missingToken:
+            case .missingToken, .tokenFetchFailure:
                 guard let authenticator = request.backend.authenticator else { throw error }
                 
                 try await authenticator.fetchToken()
