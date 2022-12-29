@@ -12,6 +12,7 @@ import XCTest
 final class APIRequestDispatcherTest: XCTestCase {
     
     var sut: APIRequestDispatcher!
+    var piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, URLSession.DataTaskPublisher>()
     let urlRequestMapper = URLRequestMapper()
     var urlSessionProvider: URLSessionProviderMock!
     lazy var urlSession: URLSession = {
@@ -23,7 +24,8 @@ final class APIRequestDispatcherTest: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        sut = APIRequestDispatcher()
+        piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, URLSession.DataTaskPublisher>()
+        sut = APIRequestDispatcher(piggyBacker: piggyBacker)
     }
     
     func test_dispatch_whenDispatchingTwoEqualRequests_shouldCombineIntoOne() async throws {
@@ -37,7 +39,7 @@ final class APIRequestDispatcherTest: XCTestCase {
         
         // Then
         await delay()
-        let requests = await sut.inFlights
+        let requests = await piggyBacker.inFlights
         XCTAssertEqual(requests.keys.count, 1)
     }
     
@@ -54,7 +56,7 @@ final class APIRequestDispatcherTest: XCTestCase {
         
         // Then
         await delay()
-        let requests = await self.sut.inFlights
+        let requests = await self.piggyBacker.inFlights
         XCTAssertEqual(requests.keys.count, 2)
     }
     
@@ -71,7 +73,7 @@ final class APIRequestDispatcherTest: XCTestCase {
         
         // Then
         try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 * 0.1)) // Cleanup happens asynchronously and isn't awaited in the dispatch method.
-        let requests = await self.sut.inFlights
+        let requests = await self.piggyBacker.inFlights
         XCTAssertEqual(requests.keys.count, 0)
     }
 }

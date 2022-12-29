@@ -13,6 +13,6 @@ struct TestAPIRequest: APIRequest {
     typealias Response = String
     
     var method: Requester.APIMethod { .get }
-    var path: String { "1000/www.google.com" }
-    var backend: Requester.Backend { .stubbed(baseURL: URL(string: "https://deelay.me/")!) }
+    var path: String { "get" }
+    var backend: Requester.Backend { .stubbed(baseURL: URL(string: "https://httpbin.org")!) }
 }

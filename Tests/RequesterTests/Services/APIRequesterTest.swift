@@ -15,6 +15,7 @@ final class APIRequesterTest: XCTestCase {
     func test_perform_shouldRefreshTokenOn401() async throws {
         // Given
         let authenticator = AuthenticatorMock()
+        authenticator.mockedShouldRefreshToken = { _, _ in true }
         let tokenID = "420"
         authenticator.stubbedAuthenticateResult = .success(tokenID)
         let sut = makeSUT(mockSetup: .responseHandler { request in
@@ -30,7 +31,7 @@ final class APIRequesterTest: XCTestCase {
         do {
             try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
         } catch {
-            XCTAssertEqual(APIErrorType.needsTokenRefresh("420"), (error as? APIError)?.type)
+            XCTAssertEqual(APIErrorType.invalidToken("420"), (error as? APIError)?.type)
         }
         
         // Then
@@ -166,7 +167,7 @@ final class APIRequesterTest: XCTestCase {
             XCTFail("Expect unauthenticated error")
         } catch {
             // Then
-            XCTAssertEqual((error as? APIError)?.type, .needsTokenRefresh(nil))
+            XCTAssertEqual((error as? APIError)?.type, .missingToken)
             XCTAssertEqual(authenticator.invokedAuthenticateCount, 2)
             XCTAssertEqual(authenticator.invokedFetchTokenCount, 1)
         }

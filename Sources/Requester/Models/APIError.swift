@@ -12,7 +12,7 @@ public enum APIErrorType: Equatable {
     case unauthorized
     case missingToken
     case tokenFetchFailure
-    case needsTokenRefresh(TokenID?)
+    case invalidToken(TokenID)
     case decoding
 }
 
