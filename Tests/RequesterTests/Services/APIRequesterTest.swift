@@ -259,9 +259,8 @@ private extension APIRequesterTest {
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses?.insert(MockURLProtocol.self, at: 0)
         MockURLProtocol.setup = mockSetup
-        let urlSesson = URLSession(configuration: configuration)
-        let urlSessionProvider = URLSessionProviderMock(stubbedURLSession: urlSesson)
-        let sut = APIRequester(dispatcher: queue, memoryCacher: memoryCacher, urlSessionProvider: urlSessionProvider)
+        let urlSessionConfigurationProvider = URLSessionConfigurationProviderMock(stubbedURLConfiguration: configuration)
+        let sut = APIRequester(dispatcher: queue, memoryCacher: memoryCacher, urlSessionConfigurationProvider: urlSessionConfigurationProvider)
         return sut
     }
 }

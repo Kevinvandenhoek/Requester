@@ -14,7 +14,10 @@ public actor APIRequester: APIRequesting {
     public let memoryCacher: MemoryCaching
     public let decoder: DataDecoding
     public let tokenRefreshDispatcher: TokenRefreshDispatching
-    public let urlSessionProvider: URLSessionProviding?
+    public let sslPinner: SSLPinning
+    
+    private let urlSessionManager: URLSessionManaging
+    private let urlSessionDelegate = URLSessionDelegateWrapper()
     
     public init(
         urlRequestMapper: URLRequestMapper = URLRequestMapper(),
@@ -22,14 +25,18 @@ public actor APIRequester: APIRequesting {
         memoryCacher: MemoryCaching = MemoryCacher(),
         decoder: DataDecoding = DataDecoder(),
         tokenRefreshDispatcher: TokenRefreshDispatching = TokenRefreshDispatcher(),
-        urlSessionProvider: URLSessionProviding? = nil
+        urlSessionConfigurationProvider: URLSessionConfigurationProviding = URLSessionConfigurationProvider(),
+        sslPinner: SSLPinning = SSLPinner()
     ) {
         self.urlRequestMapper = urlRequestMapper
         self.dispatcher = dispatcher
         self.memoryCacher = memoryCacher
         self.decoder = decoder
         self.tokenRefreshDispatcher = tokenRefreshDispatcher
-        self.urlSessionProvider = urlSessionProvider
+        self.urlSessionManager = URLSessionManager(urlSessionConfigurationProvider: urlSessionConfigurationProvider, delegate: urlSessionDelegate)
+        self.sslPinner = sslPinner
+        
+        Task { await sslPinner.setup(with: urlSessionDelegate) }
     }
     
     @discardableResult
@@ -107,7 +114,7 @@ private extension APIRequester {
             }
         }
         
-        let urlSession = urlSessionProvider?.urlSession(for: request) ?? URLSession.shared
+        let urlSession = await urlSessionManager.urlSession(for: request)
         let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID, urlSession: urlSession)
         
         try request.backend.responseProcessors.forEach { processor in

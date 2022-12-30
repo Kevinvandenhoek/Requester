@@ -14,7 +14,6 @@ final class APIRequestDispatcherTest: XCTestCase {
     var sut: APIRequestDispatcher!
     var piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, URLSession.DataTaskPublisher>()
     let urlRequestMapper = URLRequestMapper()
-    var urlSessionProvider: URLSessionProviderMock!
     lazy var urlSession: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.protocolClasses?.insert(TimeoutURLProtocol.self, at: 0)
