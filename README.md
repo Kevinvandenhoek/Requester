@@ -2,9 +2,6 @@
 
 A lightweight async/await and Combine based networking library.
 
-TODO list:
-- Ensure you are able to fully throw your own errors with the response processor (not having requester throw one before you have the chance)
-
 ## Introduction
 
 TODO
