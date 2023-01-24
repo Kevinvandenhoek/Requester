@@ -133,13 +133,7 @@ private extension APIRequester {
                 throw APIError(type: .unauthorized, statusCode: httpResponse.statusCode)
             }
         }
-           
         
-        if let httpResponse = response as? HTTPURLResponse,
-           let validStatusCodes = request.validStatusCodes,
-           !validStatusCodes.contains(where: { range in range.contains(httpResponse.statusCode) }) {
-            throw APIError(type: .general, statusCode: httpResponse.statusCode, message: "statuscode did not match validStatusCodes")
-        }
         let decoder = request.decoder ?? self.decoder
         return try decoder.decode(data)
     }
