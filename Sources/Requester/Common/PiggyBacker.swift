@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Kevin van den Hoek on 29/12/2022.
 //
@@ -56,9 +56,14 @@ public extension PiggyBacker {
     
     final class InFlight {
         
-        private(set) var didComplete: Bool = false
+        var didComplete: Bool { riders <= 0 && publisherFinished }
+        
+        private var publisherFinished = false
+        private var riders = 0
+        
         private var cancellables: [AnyCancellable] = []
         private let subject: PassthroughSubject<P.Output, Error>
+        private var storedValue: P.Output?
         
         fileprivate init(for publisher: P) {
             subject = PassthroughSubject()
@@ -67,7 +72,7 @@ public extension PiggyBacker {
                     receiveCompletion: { [weak self] completion in
                         guard let self = self else { return }
                         guard !self.didComplete else { return }
-                        Task.detached(priority: .high) { self.didComplete = true }
+                        Task.detached(priority: .high) { self.publisherFinished = true }
                         switch completion {
                         case .finished:
                             self.subject.send(completion: .finished)
@@ -84,19 +89,32 @@ public extension PiggyBacker {
         }
         
         func attach() async throws -> P.Output {
-            return try await withUnsafeThrowingContinuation { continuation in
+            return try await withCheckedThrowingContinuation { continuation in
+                var didComplete = false
+                riders += 1
                 subject
                     .sink(
-                        receiveCompletion: { result in
+                        receiveCompletion: { [weak self] result in
+                            guard let self = self else { return }
                             switch result {
                             case .finished:
-                                break
+                                if !didComplete {
+                                    guard let storedValue = self.storedValue else {
+                                        assertionFailure("PiggyBacker finished without a value, shouldn't happen")
+                                        return
+                                    }
+                                    continuation.resume(with: .success(storedValue))
+                                    self.riders -= 1
+                                }
                             case .failure(let error):
                                 continuation.resume(throwing: error)
+                                self.riders -= 1
                             }
                         },
                         receiveValue: { value in
+                            self.storedValue = value
                             continuation.resume(returning: value)
+                            self.riders -= 1
                         }
                     )
                     .store(in: &cancellables)
@@ -105,7 +123,7 @@ public extension PiggyBacker {
         
         func `throw`(error: APIError) {
             subject.send(completion: .failure(error))
-            didComplete = true
+            publisherFinished = true
             cancellables = []
         }
     }

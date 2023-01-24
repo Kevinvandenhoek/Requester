@@ -11,7 +11,6 @@ public protocol APIRequest: Equatable {
     
     associatedtype Response: Decodable
     
-    var validStatusCodes: Set<ClosedRange<Int>>? { get }
     var parameterEncoding: ParameterEncoding { get }
     var headers: [String: String] { get }
     var method: APIMethod { get }
@@ -25,7 +24,6 @@ public protocol APIRequest: Equatable {
 // MARK: Defaults
 public extension APIRequest {
     
-    var validStatusCodes: Set<ClosedRange<Int>>? { nil }
     var headers: [String: String] { [:] }
     var parameters: [String: Any] { [:] }
     var cachingGroups: [CachingGroup] { [] }

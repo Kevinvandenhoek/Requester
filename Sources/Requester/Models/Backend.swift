@@ -16,7 +16,7 @@ public protocol Backend {
 }
 
 public extension Backend where Self == DefaultBackend {
-    
+
     static func `default`(
         baseURL: URL,
         authenticator: Authenticating? = nil,
