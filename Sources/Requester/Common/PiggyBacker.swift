@@ -91,32 +91,32 @@ public extension PiggyBacker {
         func attach() async throws -> P.Output {
             return try await withUnsafeThrowingContinuation { continuation in
                 riders += 1
-                var didComplete = false
+                var didResume = false
                 subject
                     .sink(
                         receiveCompletion: { [weak self] result in
                             guard let self = self else { return }
                             switch result {
                             case .finished:
-                                if !didComplete {
+                                if !didResume {
                                     guard let storedValue = self.storedValue else {
                                         assertionFailure("PiggyBacker finished without a value, shouldn't happen")
                                         return
                                     }
                                     continuation.resume(with: .success(storedValue))
-                                    didComplete = true
+                                    didResume = true
                                     self.riders -= 1
                                 }
                             case .failure(let error):
                                 continuation.resume(throwing: error)
-                                didComplete = true
+                                didResume = true
                                 self.riders -= 1
                             }
                         },
                         receiveValue: { value in
                             self.storedValue = value
                             continuation.resume(returning: value)
-                            didComplete = true
+                            didResume = true
                             self.riders -= 1
                         }
                     )
