@@ -21,8 +21,8 @@ public actor TokenRefreshDispatcher: TokenRefreshDispatching {
     }
     
     public func performTokenRefresh(with authenticator: Authenticating, tokenID: TokenID?) async throws {
-        guard let tokenID = tokenID else { return try await authenticator.fetchToken() }
-        return try await piggyBacker.dispatch(tokenID) { tokenID in
+        let dispatchID = tokenID ?? String(describing: type(of: authenticator))
+        return try await piggyBacker.dispatch(dispatchID) { dispatchID in
             return Future<Void, Error>() { promise in
                 Task {
                     do {

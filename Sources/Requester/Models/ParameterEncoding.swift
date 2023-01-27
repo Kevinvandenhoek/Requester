@@ -69,7 +69,7 @@ public enum URLEncodingDestination {
         switch method {
         case .get, .put, .delete:
             return .queryString
-        case .post, .patch: // TODO: Double check if body is the correct default destination for a patch apimethod
+        case .post, .patch:
             return .body
         }
     }

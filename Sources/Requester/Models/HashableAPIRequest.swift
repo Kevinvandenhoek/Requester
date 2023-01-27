@@ -23,7 +23,7 @@ public struct HashableAPIRequest: Hashable {
     
     public static func == (lhs: Self, rhs: Self) -> Bool {
         return lhs.headers == rhs.headers
-            && lhs.backend.baseURL == rhs.backend.baseURL // TODO: Check if we can take all members in consideration instead of just the baseURL
+            && lhs.backend.baseURL == rhs.backend.baseURL
             && lhs.path == rhs.path
             && lhs.parameters == rhs.parameters
     }

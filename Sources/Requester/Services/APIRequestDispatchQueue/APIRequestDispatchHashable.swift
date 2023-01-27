@@ -28,7 +28,7 @@ public struct APIRequestDispatchHashable: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(urlRequest)
         hasher.combine(apiRequest.headers)
-        hasher.combine(apiRequest.backend.baseURL) // TODO: Check if we can take all members in consideration instead of just the baseURL
+        hasher.combine(apiRequest.backend.baseURL)
         hasher.combine(apiRequest.path)
         hasher.combine(apiRequest.parameters as NSDictionary)
         hasher.combine(tokenID)
