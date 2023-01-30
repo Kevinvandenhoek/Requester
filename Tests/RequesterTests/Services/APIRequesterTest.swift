@@ -39,7 +39,7 @@ final class APIRequesterTest: XCTestCase {
         XCTAssertEqual(authenticator.invokedFetchTokenCount, 1)
     }
     
-    func test_perform_shouldNotThrowErrorOn500IfValidStatusCodesIsNil() async throws {
+    func test_perform_shouldNotThrowErrorOn500IfValidStatusCodeValidationIsNone() async throws {
         // Given
         let authenticator = AuthenticatorMock()
         let sut = makeSUT(mockSetup: .responseHandler { request in
@@ -54,7 +54,10 @@ final class APIRequesterTest: XCTestCase {
         })
         
         // When
-        try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
+        try await sut.perform(APIRequestMock(
+            backend: .stubbed(authenticator: authenticator),
+            statusCodeValidation: StatusCodeValidation.none
+        ))
         
         // Then
         XCTAssertEqual(authenticator.invokedAuthenticateCount, 1)
@@ -62,7 +65,7 @@ final class APIRequesterTest: XCTestCase {
     }
     
     
-    func test_perform_shouldThrowErrorOn500IfValidStatusCodesDoesntContain500() async throws {
+    func test_perform_shouldThrowErrorOn500IfDefaultStatusCodeValidation() async throws {
         // Given
         let authenticator = AuthenticatorMock()
         let sut = makeSUT(mockSetup: .responseHandler { request in
@@ -77,10 +80,11 @@ final class APIRequesterTest: XCTestCase {
         // When
         do {
             try await sut.perform(APIRequestMock(
-                backend: .stubbed(authenticator: authenticator)
+                backend: .stubbed(authenticator: authenticator),
+                statusCodeValidation: .default
             ))
         } catch {
-            XCTAssertEqual(APIErrorType.general, (error as? APIError)?.type)
+            XCTAssertEqual(APIErrorType.invalidStatusCode, (error as? APIError)?.type)
         }
         
         // Then
