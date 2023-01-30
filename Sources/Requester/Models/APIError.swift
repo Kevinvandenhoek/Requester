@@ -9,6 +9,7 @@ import Foundation
 
 public enum APIErrorType: Equatable {
     case general
+    case invalidStatusCode
     case unauthorized
     case missingToken
     case tokenFetchFailure

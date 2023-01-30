@@ -19,6 +19,7 @@ public protocol APIRequest: Equatable {
     var backend: Backend { get }
     var decoder: DataDecoding? { get }
     var cachingGroups: [CachingGroup] { get }
+    var statusCodeValidation: StatusCodeValidation { get }
 }
 
 // MARK: Defaults
@@ -31,6 +32,7 @@ public extension APIRequest {
     var parameterEncoding: ParameterEncoding {
         method == .get ? .url() : .json
     }
+    var statusCodeValidation: StatusCodeValidation { .default }
 }
 
 // MARK: Comparison
