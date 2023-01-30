@@ -110,7 +110,7 @@ private extension APIRequester {
             case .success(let usedTokenID):
                 tokenID = usedTokenID
             case .failure(.missingToken):
-                throw APIError(type: .missingToken)
+                throw APIError(type: .missingToken, urlRequest: urlRequest)
             }
         }
         
@@ -125,16 +125,72 @@ private extension APIRequester {
            let authenticator = request.backend.authenticator {
             if authenticator.shouldRefreshToken(response: httpResponse, data: data) {
                 if let tokenID = tokenID {
-                    throw APIError(type: .invalidToken(tokenID), statusCode: httpResponse.statusCode)
+                    throw APIError(
+                        type: .invalidToken(tokenID),
+                        statusCode: httpResponse.statusCode,
+                        urlRequest: urlRequest,
+                        data: data,
+                        response: response
+                    )
                 } else {
-                    throw APIError(type: .missingToken, statusCode: httpResponse.statusCode)
+                    throw APIError(
+                        type: .missingToken,
+                        statusCode: httpResponse.statusCode,
+                        urlRequest: urlRequest,
+                        data: data,
+                        response: response
+                    )
                 }
             } else if httpResponse.statusCode == 401 {
-                throw APIError(type: .unauthorized, statusCode: httpResponse.statusCode)
+                throw APIError(
+                    type: .unauthorized,
+                    statusCode: httpResponse.statusCode,
+                    urlRequest: urlRequest,
+                    data: data,
+                    response: response
+                )
             }
         }
         
+        switch request.statusCodeValidation {
+        case .default:
+            guard let httpResponse = response as? HTTPURLResponse else { break }
+            if !Range(200...299).contains(httpResponse.statusCode) {
+                throw APIError(
+                    type: .invalidStatusCode,
+                    statusCode: httpResponse.statusCode,
+                    urlRequest: urlRequest,
+                    data: data,
+                    response: response
+                )
+            }
+        case .custom(let isValid):
+            guard let httpResponse = response as? HTTPURLResponse else { break }
+            if !isValid(httpResponse.statusCode) {
+                throw APIError(
+                    type: .invalidStatusCode,
+                    statusCode: httpResponse.statusCode,
+                    urlRequest: urlRequest,
+                    data: data,
+                    response: response
+                )
+            }
+        case .none:
+            break
+        }
+        
         let decoder = request.decoder ?? self.decoder
-        return try decoder.decode(data)
+        do {
+            return try decoder.decode(data)
+        } catch {
+            throw APIError(
+                type: .decoding,
+                statusCode: (response as? HTTPURLResponse)?.statusCode,
+                underlyingError: error,
+                urlRequest: urlRequest,
+                data: data,
+                response: response
+            )
+        }
     }
 }
