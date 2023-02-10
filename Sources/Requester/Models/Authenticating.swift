@@ -19,12 +19,12 @@ public protocol Authenticating {
     func fetchToken() async throws
     
     /// The default implementation is a check if the status code is 401, in which case it will return true.
-    func shouldRefreshToken(response: HTTPURLResponse, data: Data) -> Bool
+    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) -> Bool
 }
 
 public extension Authenticating {
     
-    func shouldRefreshToken(response: HTTPURLResponse, data: Data) -> Bool {
+    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) -> Bool {
         return response.statusCode == 401
     }
 }

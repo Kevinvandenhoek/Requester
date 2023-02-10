@@ -74,7 +74,7 @@ public actor APIRequester: APIRequesting {
     }
     
     @discardableResult
-    public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, maxCacheLifetime: TimeInterval?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
+    public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, maxCacheLifetime: CacheLifetime?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
         if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: maxCacheLifetime) {
             return cached
         } else {
@@ -123,7 +123,7 @@ private extension APIRequester {
         
         if let httpResponse = response as? HTTPURLResponse,
            let authenticator = request.backend.authenticator {
-            if authenticator.shouldRefreshToken(response: httpResponse, data: data) {
+            if authenticator.shouldRefreshToken(request: request, response: httpResponse, data: data) {
                 if let tokenID = tokenID {
                     throw APIError(
                         type: .invalidToken(tokenID),

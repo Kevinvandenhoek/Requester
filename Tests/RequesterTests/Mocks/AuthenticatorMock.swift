@@ -38,7 +38,7 @@ final class AuthenticatorMock: Authenticating {
     var invokedShouldRefreshTokenCount: Int = 0
     var mockedShouldRefreshToken: ((HTTPURLResponse, Data) -> Bool)?
     
-    func shouldRefreshToken(response: HTTPURLResponse, data: Data) -> Bool {
+    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) -> Bool {
         invokedShouldRefreshToken = true
         invokedShouldRefreshTokenCount += 1
         return mockedShouldRefreshToken?(response, data) ?? (response.statusCode == 401)

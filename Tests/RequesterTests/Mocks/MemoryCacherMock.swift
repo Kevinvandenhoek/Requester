@@ -48,7 +48,7 @@ class MemoryCacherMock: MemoryCaching {
         invokedGroupsCount += 1
     }
     
-    func clear(groups: [CachingGroup]) async {
+    func clear(groups: Set<CachingGroup>) async {
         invokedGroups = true
         invokedGroupsCount += 1
     }

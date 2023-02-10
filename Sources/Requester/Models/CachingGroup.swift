@@ -7,7 +7,4 @@
 
 import Foundation
 
-public protocol CachingGroup {
-    
-    var id: String { get }
-}
+public typealias CachingGroup = AnyHashable

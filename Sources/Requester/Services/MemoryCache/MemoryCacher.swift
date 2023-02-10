@@ -24,7 +24,7 @@ public actor MemoryCacher: MemoryCaching {
         return await get(request: request, maxLifetime: nil)
     }
     
-    public func get<Request: APIRequest, Model>(request: Request, maxLifetime: TimeInterval?) async -> Model? {
+    public func get<Request: APIRequest, Model>(request: Request, maxLifetime: CacheLifetime?) async -> Model? {
         let date = Date()
         let key = RequestKey(for: request)
         guard let stored = storage[key],
@@ -41,13 +41,13 @@ public actor MemoryCacher: MemoryCaching {
     }
     
     public func clear(groups: CachingGroup...) async {
-        await clear(groups: groups)
+        await clear(groups: Set(groups))
     }
     
-    public func clear(groups: [CachingGroup]) async {
+    public func clear(groups: Set<CachingGroup>) async {
         storage.keys.forEach({ request in
             guard request.cachingGroups.contains(where: { group in
-                return groups.map({ $0.id }).contains(group.id)
+                return groups.contains(group)
             }) else { return }
             storage.removeValue(forKey: request)
         })
@@ -68,7 +68,7 @@ private extension MemoryCacher {
     
     struct RequestKey: Hashable {
         let hashable: HashableAPIRequest
-        let cachingGroups: [CachingGroup]
+        let cachingGroups: Set<CachingGroup>
         
         init<Request: APIRequest>(for request: Request) {
             hashable = HashableAPIRequest(from: request)
