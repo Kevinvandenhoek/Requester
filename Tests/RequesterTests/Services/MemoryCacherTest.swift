@@ -38,7 +38,7 @@ final class MemoryCacheTest: XCTestCase {
         let model = APIRequestResponseMock(id: "1")
         let request = APIRequestMock(parameters: ["name": "arie"], cachingGroups: [cachingGroup])
         await sut.store(request: request, model: model)
-        await sut.clear(groups: [cachingGroup])
+        await sut.clear([cachingGroup])
         
         // When
         let result: [APIRequestResponseMock]? = await sut.get(request: request)
@@ -52,7 +52,7 @@ final class MemoryCacheTest: XCTestCase {
         let model = APIRequestResponseMock(id: "1")
         let request = APIRequestMock(parameters: ["name": "arie"], cachingGroups: [CachingGroupMock(id: "1")])
         await sut.store(request: request, model: model)
-        await sut.clear(groups: CachingGroupMock(id: "2"))
+        await sut.clear([CachingGroupMock(id: "2")])
         
         // When
         let result: APIRequestResponseMock? = await sut.get(request: request)

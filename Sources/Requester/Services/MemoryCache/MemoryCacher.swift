@@ -40,11 +40,7 @@ public actor MemoryCacher: MemoryCaching {
         storage = [:]
     }
     
-    public func clear(groups: CachingGroup...) async {
-        await clear(groups: Set(groups))
-    }
-    
-    public func clear(groups: Set<CachingGroup>) async {
+    public func clear(_ groups: Set<CachingGroup>) async {
         storage.keys.forEach({ request in
             guard request.cachingGroups.contains(where: { group in
                 return groups.contains(group)

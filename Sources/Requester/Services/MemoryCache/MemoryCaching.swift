@@ -13,6 +13,5 @@ public protocol MemoryCaching {
     func get<Request: APIRequest, Model>(request: Request) async -> Model?
     func get<Request: APIRequest, Model>(request: Request, maxLifetime: CacheLifetime?) async -> Model?
     func clear() async
-    func clear(groups: CachingGroup...) async
-    func clear(groups: Set<CachingGroup>) async
+    func clear(_ groups: Set<CachingGroup>) async
 }
