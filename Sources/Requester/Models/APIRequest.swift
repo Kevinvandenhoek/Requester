@@ -18,7 +18,7 @@ public protocol APIRequest: Equatable {
     var parameters: [String: Any] { get }
     var backend: Backend { get }
     var decoder: DataDecoding? { get }
-    var cachingGroups: Set<CachingGroup> { get }
+    var cachingGroups: [CachingGroup] { get }
     var statusCodeValidation: StatusCodeValidation { get }
 }
 
@@ -27,7 +27,7 @@ public extension APIRequest {
     
     var headers: [String: String] { [:] }
     var parameters: [String: Any] { [:] }
-    var cachingGroups: Set<CachingGroup> { [] }
+    var cachingGroups: [CachingGroup] { [] }
     var decoder: DataDecoding? { nil }
     var parameterEncoding: ParameterEncoding {
         method == .get ? .url() : .json

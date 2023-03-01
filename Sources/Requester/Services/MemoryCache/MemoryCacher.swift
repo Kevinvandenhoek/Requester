@@ -40,10 +40,16 @@ public actor MemoryCacher: MemoryCaching {
         storage = [:]
     }
     
-    public func clear(_ groups: Set<CachingGroup>) async {
+    public func clear(_ group: CachingGroup) async {
+        await clear([group])
+    }
+    
+    public func clear(_ groups: [CachingGroup]) async {
         storage.keys.forEach({ request in
             guard request.cachingGroups.contains(where: { group in
-                return groups.contains(group)
+                return groups
+                    .map({ $0.id })
+                    .contains(group.id)
             }) else { return }
             storage.removeValue(forKey: request)
         })
@@ -64,7 +70,7 @@ private extension MemoryCacher {
     
     struct RequestKey: Hashable {
         let hashable: HashableAPIRequest
-        let cachingGroups: Set<CachingGroup>
+        let cachingGroups: [CachingGroup]
         
         init<Request: APIRequest>(for request: Request) {
             hashable = HashableAPIRequest(from: request)
