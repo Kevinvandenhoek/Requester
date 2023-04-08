@@ -15,14 +15,20 @@ public struct NetworkActivityView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: 30) {
-                ForEach(store.activity.sorted(by: { $0.date < $1.date }), content: view)
+                ForEach(items, content: view)
             }
             .padding(.all, 25)
         }
+        .background(Color.white)
     }
 }
 
 private extension NetworkActivityView {
+    
+    var items: [NetworkActivityItem] {
+        return store.activity
+            .sorted(by: { $0.date < $1.date })
+    }
     
     func statusText(for activity: NetworkActivityItem) -> String {
         switch activity.state {

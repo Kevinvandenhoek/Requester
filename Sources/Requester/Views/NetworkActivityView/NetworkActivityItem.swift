@@ -26,6 +26,17 @@ public struct NetworkActivityItem: Identifiable, Hashable {
         case inProgress
         case failed(URLSession.DataTaskPublisher.Failure)
         case succeeded(URLSession.DataTaskPublisher.Output)
+        
+        var id: Int {
+            switch self {
+            case .inProgress:
+                return 0
+            case .succeeded:
+                return 1
+            case .failed:
+                return 2
+            }
+        }
     }
     
     public mutating func update(to state: State) {
@@ -34,10 +45,11 @@ public struct NetworkActivityItem: Identifiable, Hashable {
     }
     
     public static func == (lhs: NetworkActivityItem, rhs: NetworkActivityItem) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.id == rhs.id && lhs.state.id == rhs.state.id
     }
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+        hasher.combine(state.id)
     }
 }
