@@ -15,7 +15,6 @@ struct NetworkActivityDetailView: View {
     let item: NetworkActivityItem
     
     var body: some View {
-        Text("arie")
         ScrollView {
             VStack(alignment: .leading, spacing: 60) {
                 section("Request") {
@@ -27,22 +26,22 @@ struct NetworkActivityDetailView: View {
                         keyValue("Headers", item.request.allHTTPHeaderFields)
                     }
                 }
-//                section("Response") {
-//                    VStack(alignment: .leading, spacing: 20) {
-//                        keyValue("Status", item.statusText)
-//                        if item.duration != nil {
-//                            keyValue("Duration", item.durationText)
-//                        }
-//                        switch item.state {
-//                        case .succeeded(let result):
-//                            responseBody(for: result)
-//                        case .failed(let error):
-//                            errorSection(for: error)
-//                        case .inProgress:
-//                            EmptyView()
-//                        }
-//                    }
-//                }
+                section("Response") {
+                    VStack(alignment: .leading, spacing: 20) {
+                        keyValue("Status", item.statusText)
+                        if item.duration != nil {
+                            keyValue("Duration", item.durationText)
+                        }
+                        switch item.state {
+                        case .succeeded(let result):
+                            responseBody(for: result)
+                        case .failed(let error):
+                            errorSection(for: error)
+                        case .inProgress:
+                            EmptyView()
+                        }
+                    }
+                }
                 if item.associatedResults.contains(where: { $0.failedStep != nil }) {
                     section("Issues") {
                         ForEach(Array(item.associatedResults.filter({ $0.failedStep != nil }))) { result in
@@ -67,14 +66,15 @@ extension NetworkActivityDetailView {
     @ViewBuilder
     func responseBody(for output: URLSession.DataTaskPublisher.Output) -> some View {
         keyValueView("Body") {
-            Text(output.data.formattedText)
-                .font(.system(size: 10))
-                .padding(.all, 10)
-                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
-                .padding(.top, 6)
-                .onTapGesture {
-                    UIPasteboard.general.string = output.data.formattedText
-                }
+            Text("some body")
+//            Text(output.data.formattedText)
+//                .font(.system(size: 10))
+//                .padding(.all, 10)
+//                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+//                .padding(.top, 6)
+//                .onTapGesture {
+//                    UIPasteboard.general.string = output.data.formattedText
+//                }
         }
     }
     
