@@ -34,7 +34,7 @@ struct NetworkActivityDetailView: View {
                         }
                         switch item.state {
                         case .succeeded(let result):
-                            responseBody(for: result.data.formattedJSON)
+                            responseBody(for: result.data)
                         case .failed(let error):
                             errorSection(for: error)
                         case .inProgress:
@@ -64,43 +64,19 @@ struct NetworkActivityDetailView: View {
 extension NetworkActivityDetailView {
     
     @ViewBuilder
-    func responseBody(for json: String) -> some View {
+    func responseBody(for data: Data) -> some View {
         keyValueView("Body") {
             ZStack(alignment: .topLeading) {
-                if json.count > 1000 {
-                    ScrollViewReader { proxy in
-                        ScrollView([.horizontal, .vertical]) {
-                            VStack(alignment: .leading, spacing: 0) {
-                                ForEach(json.split(separator: "\n"), id: \.self) { line in
-                                    HStack {
-                                        Text(line)
-                                            .font(.system(size: 10))
-                                            .lineLimit(1)
-                                        Spacer()
-                                    }
-                                    .frame(height: 13)
-                                    .frame(maxWidth: .infinity)
-                                }
-                            }
-                            .id("root")
-                            .onAppear {
-                                proxy.scrollTo("root", anchor: .topLeading)
-                            }
-                        }
-                        .padding(.all, 10)
-                        .frame(height: 400)
-                    }
+                if let json = data.json {
+                    JSONView(json: json)
                 } else {
-                    Text(json)
+                    Text(String(data: data, encoding: .utf8) ?? "")
                         .font(.system(size: 10))
                         .padding(.all, 10)
                 }
             }
             .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
             .padding(.top, 6)
-            .onTapGesture {
-                UIPasteboard.general.string = json
-            }
         }
     }
     
@@ -203,13 +179,9 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
 
 private extension Data {
     
-    var formattedJSON: String {
-        if let jsonObject = try? JSONSerialization.jsonObject(with: self, options: []),
-              let jsonData = try? JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .withoutEscapingSlashes]) {
-            return String(data: jsonData, encoding: .utf8) ?? "bad data"
-        } else {
-            return String(data: self, encoding: .utf8) ?? "bad data"
-        }
+    var json: [String: Any]? {
+        let object = try? JSONSerialization.jsonObject(with: self, options: [])
+        return object as? [String: Any]
     }
 }
 
