@@ -59,7 +59,7 @@ struct NetworkActivityDetailView: View {
 //            .padding(.all, 25)
 //            .frame(maxWidth: .infinity, alignment: .leading)
 //        }
-//    }
+    }
 }
 
 extension NetworkActivityDetailView {
