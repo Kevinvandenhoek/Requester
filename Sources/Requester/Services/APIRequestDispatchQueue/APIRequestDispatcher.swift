@@ -44,7 +44,7 @@ public actor APIRequestDispatcher: APIRequestDispatching {
     }
     
     public func add(delegate: APIRequestDispatchingDelegate) async {
-        guard self.delegates.contains(where: { $0() === delegate }) else { return }
+        guard self.delegates.contains(where: { $0() === delegate }) == false else { return }
         self.delegates.append({ [weak delegate] in delegate })
     }
     
