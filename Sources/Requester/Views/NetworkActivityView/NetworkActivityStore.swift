@@ -72,7 +72,6 @@ public struct APIRequestingResult: Hashable {
 
 public enum APIRequestingStep: Hashable {
     case dispatching
-    case request
     case processing
     case authorizationValidation
     case statusCodeValidation

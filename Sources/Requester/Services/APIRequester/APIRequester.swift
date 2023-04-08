@@ -200,6 +200,11 @@ private extension APIRequester {
                 let decoded: Request.Response = try decoder.decode(data)
                 step = .mapping
                 let result: Mapped = try mapper(decoded)
+                if let dispatchId {
+                    stores.forEach { store in
+                        store()?.requester(self, didGetResult: APIRequestingResult(request: request, failedStep: nil, error: nil), for: dispatchId)
+                    }
+                }
                 return result
             } catch {
                 throw APIError(
