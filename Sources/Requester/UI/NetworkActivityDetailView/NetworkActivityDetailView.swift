@@ -179,9 +179,8 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
 
 private extension Data {
     
-    var json: [String: Any]? {
-        let object = try? JSONSerialization.jsonObject(with: self, options: [])
-        return object as? [String: Any]
+    var json: Any? {
+        return try? JSONSerialization.jsonObject(with: self, options: [])
     }
 }
 
