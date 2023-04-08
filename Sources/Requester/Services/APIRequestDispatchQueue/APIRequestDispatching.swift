@@ -13,4 +13,6 @@ public protocol APIRequestDispatching {
     func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, tokenID: TokenID?, urlSession: URLSession) async throws -> (Data, URLResponse)
     func throwRequests(for tokenID: TokenID, error: APIError) async
     func throwAllRequests(error: APIError) async
+    
+    func add(delegate: APIRequestDispatchingDelegate) async
 }
