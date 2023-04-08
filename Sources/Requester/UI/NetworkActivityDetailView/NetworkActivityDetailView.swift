@@ -66,8 +66,7 @@ extension NetworkActivityDetailView {
     @ViewBuilder
     func responseBody(for output: URLSession.DataTaskPublisher.Output) -> some View {
         keyValueView("Body") {
-            Text("some body")
-//            Text(output.data.formattedText)
+            Text(output.data.formattedText)
                 .font(.system(size: 10))
                 .padding(.all, 10)
                 .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
@@ -203,12 +202,23 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
 private extension Data {
     
     var formattedText: String {
-        guard let jsonObject = try? JSONSerialization.jsonObject(with: self, options: []),
-              let jsonData = try? JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .withoutEscapingSlashes]),
-              let jsonString = String(data: jsonData, encoding: .utf8) else {
+        do {
+            print("🐛 formatting \(#line)")
+            let jsonObject = try JSONSerialization.jsonObject(with: self, options: [])
+            print("🐛 formatting \(#line)")
+            let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .withoutEscapingSlashes])
+            print("🐛 formatting \(#line)")
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("🐛 formatting \(#line)")
+                return jsonString
+            } else {
+                print("🐛 formatting \(#line)")
+                return String(decoding: self, as: UTF8.self)
+            }
+        } catch {
+            print("🐛 formatting error \(String(describing: error))")
             return String(decoding: self, as: UTF8.self)
         }
-        return jsonString
     }
 }
 
