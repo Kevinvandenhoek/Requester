@@ -209,7 +209,7 @@ private extension Data {
             let jsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: [.prettyPrinted, .withoutEscapingSlashes])
             print("🐛 formatting \(#line)")
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-                print("🐛 formatting \(#line)")
+                print("🐛 formatted result \(jsonString)")
                 return jsonString
             } else {
                 print("🐛 formatting \(#line)")
