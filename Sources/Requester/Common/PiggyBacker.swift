@@ -15,16 +15,24 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher> {
     public init() { }
     
     @discardableResult
-    public func dispatch(_ key: HashKey, createPublisher: (HashKey) -> P) async throws -> P.Output {
+    public func dispatch(_ key: HashKey, id: inout UUID?, createPublisher: (UUID, HashKey) -> P) async throws -> P.Output {
         defer { Task { await cleanCompletedInFlights() } }
         
         if let existing = inFlights[key], !existing.didComplete {
+            id = existing.id
             return try await existing.attach()
         } else {
-            let inflight = InFlight(for: createPublisher(key))
+            id = UUID()
+            let inflight = InFlight(for: createPublisher(id!, key), id: id!)
             inFlights[key] = inflight
             return try await inflight.attach()
         }
+    }
+    
+    @discardableResult
+    public func dispatch(_ key: HashKey, createPublisher: (UUID, HashKey) -> P) async throws -> P.Output {
+        var id: UUID?
+        return try await dispatch(key, id: &id, createPublisher: createPublisher)
     }
     
     public func throwInFlights(where condition: (HashKey) -> Bool, error: APIError) async {
@@ -56,6 +64,7 @@ public extension PiggyBacker {
     
     final class InFlight {
         
+        let id: UUID
         var didComplete: Bool { riders <= 0 && publisherFinished }
         
         private var publisherFinished = false
@@ -65,7 +74,8 @@ public extension PiggyBacker {
         private let subject: PassthroughSubject<P.Output, Error>
         private var storedValue: P.Output?
         
-        fileprivate init(for publisher: P) {
+        fileprivate init(for publisher: P, id: UUID) {
+            self.id = id
             subject = PassthroughSubject()
             publisher
                 .sink(

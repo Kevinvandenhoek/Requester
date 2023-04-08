@@ -13,7 +13,7 @@ public final class NetworkActivityStore: ObservableObject {
     public static let `default` = NetworkActivityStore()
     
     @Published
-    var activity: [UUID: NetworkActivityItem]
+    var activity: [APIRequestDispatchID: NetworkActivityItem]
     
     private var cancellables: [AnyCancellable] = []
     
@@ -28,8 +28,7 @@ public final class NetworkActivityStore: ObservableObject {
 
 extension NetworkActivityStore: APIRequestDispatchingDelegate {
     
-    public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskPublisher, for urlRequest: URLRequest) {
-        let id = UUID()
+    public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskPublisher, for urlRequest: URLRequest, id: APIRequestDispatchID) {
         var activity = NetworkActivityItem(urlRequest)
         self.activity[id] = activity
         
@@ -45,4 +44,38 @@ extension NetworkActivityStore: APIRequestDispatchingDelegate {
             .sink(receiveValue: updateActivity)
             .store(in: &self.cancellables)
     }
+}
+
+extension NetworkActivityStore: APIRequestingActivityDelegate {
+    
+    public func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID) {
+        activity[id]?.associatedResults.insert(result)
+    }
+}
+
+public struct APIRequestingResult: Hashable {
+    
+    let request: any APIRequest
+    let failedStep: APIRequestingStep?
+    let error: Error?
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(HashableAPIRequest(from: request))
+        hasher.combine(failedStep)
+    }
+    
+    public static func == (lhs: APIRequestingResult, rhs: APIRequestingResult) -> Bool {
+        return HashableAPIRequest(from: lhs.request) == HashableAPIRequest(from: rhs.request)
+            && lhs.failedStep == rhs.failedStep
+    }
+}
+
+public enum APIRequestingStep: Hashable {
+    case dispatching
+    case request
+    case processing
+    case authorizationValidation
+    case statusCodeValidation
+    case decoding
+    case mapping
 }

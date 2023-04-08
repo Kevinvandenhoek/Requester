@@ -11,6 +11,7 @@ public struct NetworkActivityItem {
     
     public let date: Date
     public let request: URLRequest
+    public var associatedResults: Set<APIRequestingResult> = []
     private(set) var completion: Date?
     private(set) var state: State
     

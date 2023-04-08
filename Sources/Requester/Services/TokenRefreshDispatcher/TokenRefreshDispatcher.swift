@@ -22,7 +22,7 @@ public actor TokenRefreshDispatcher: TokenRefreshDispatching {
     
     public func performTokenRefresh(with authenticator: Authenticating, tokenID: TokenID?) async throws {
         let dispatchID = tokenID ?? String(describing: type(of: authenticator))
-        return try await piggyBacker.dispatch(dispatchID) { dispatchID in
+        return try await piggyBacker.dispatch(dispatchID) { _, dispatchID in
             return Future<Void, Error>() { promise in
                 Task {
                     do {

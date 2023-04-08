@@ -21,18 +21,25 @@ public actor APIRequestDispatcher: APIRequestDispatching {
     }
     
     @discardableResult
-    public func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, tokenID: TokenID?, urlSession: URLSession) async throws -> (Data, URLResponse) {
+    public func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, tokenID: TokenID?, urlSession: URLSession, dispatchId: inout APIRequestDispatchID?) async throws -> (Data, URLResponse) {
         return try await piggyBacker.dispatch(
             HashKey(urlRequest, apiRequest, tokenID: tokenID),
-            createPublisher: { _ in
+            id: &dispatchId,
+            createPublisher: { id, _ in
                 let publisher = urlSession
                     .dataTaskPublisher(for: urlRequest)
                 delegates.compactMap({ $0() }).forEach { delegate in
-                    delegate?.requestDispatcher(self, didCreate: publisher, for: urlRequest)
+                    delegate?.requestDispatcher(self, didCreate: publisher, for: urlRequest, id: id)
                 }
                 return publisher
             }
         )
+    }
+    
+    @discardableResult
+    public func dispatch<Request: APIRequest>(_ urlRequest: URLRequest, _ apiRequest: Request, tokenID: TokenID?, urlSession: URLSession) async throws -> (Data, URLResponse) {
+        var id: APIRequestDispatchID?
+        return try await dispatch(urlRequest, apiRequest, tokenID: tokenID, urlSession: urlSession, dispatchId: &id)
     }
     
     public func throwRequests(for tokenID: TokenID, error: APIError) async {
