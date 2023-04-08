@@ -9,7 +9,11 @@ import Foundation
 
 public actor APIRequester: APIRequesting {
     
+    #if DEBUG
+    public static let `default` = APIRequester(enableNetworkMonitoring: true)
+    #else
     public static let `default` = APIRequester()
+    #endif
     
     public let urlRequestMapper: URLRequestMapper
     public let dispatcher: APIRequestDispatching
@@ -30,7 +34,8 @@ public actor APIRequester: APIRequesting {
         decoder: DataDecoding = DataDecoder(),
         tokenRefreshDispatcher: TokenRefreshDispatching = TokenRefreshDispatcher(),
         urlSessionConfigurationProvider: URLSessionConfigurationProviding = URLSessionConfigurationProvider(),
-        sslPinner: SSLPinning = SSLPinner()
+        sslPinner: SSLPinning = SSLPinner(),
+        enableNetworkMonitoring: Bool = false
     ) {
         self.urlRequestMapper = urlRequestMapper
         self.dispatcher = dispatcher
@@ -42,6 +47,9 @@ public actor APIRequester: APIRequesting {
         
         Task {
             await sslPinner.setup(with: urlSessionDelegate)
+            if enableNetworkMonitoring {
+                await setupActivityMonitoring()
+            }
         }
     }
     
