@@ -34,6 +34,7 @@ public struct NetworkActivityView: View {
                         .font(.caption)
                 }
                 .padding(.all, 25)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(.systemBackground))
             }
@@ -97,50 +98,51 @@ private extension NetworkActivityView {
                     Capsule()
                         .foregroundColor(activity.indicatorColor)
                         .frame(width: 3)
-                    description(for: activity)
-                    Spacer()
-                    status(for: activity)
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack(alignment: .top) {
+                            Text(activity.pathText)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color.text)
+                                .multilineTextAlignment(.leading)
+                            Spacer()
+                            Text(activity.statusText)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(activity.statusColor)
+                                .multilineTextAlignment(.trailing)
+                        }
+                        HStack(alignment: .top) {
+                            Text(activity.methodText)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(Color.subtleText)
+                                .multilineTextAlignment(.leading)
+                            Spacer()
+                            Text(activity.issuesText)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(activity.issuesColor)
+                                .multilineTextAlignment(.trailing)
+                        }
+                        HStack(alignment: .top) {
+                            Text(activity.baseUrlText)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(Color.subtleText)
+                                .multilineTextAlignment(.leading)
+                            Spacer()
+                            Text(activity.durationText)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(activity.durationColor)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
                 }
             }
         )
-    }
-    
-    @ViewBuilder
-    func status(for activity: NetworkActivityItem) -> some View {
-        VStack(alignment: .trailing, spacing: 5) {
-            Text(activity.statusText)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(activity.statusColor)
-            Text(activity.issuesText)
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(activity.issuesColor)
-            Text(activity.durationText)
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(activity.durationColor)
-        }
-    }
-    
-    @ViewBuilder
-    func description(for activity: NetworkActivityItem) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(activity.pathText)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundColor(Color.text)
-            Text(activity.methodText)
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(Color.subtleText)
-            Text(activity.baseUrlText)
-                .font(.system(size: 9, weight: .bold))
-                .foregroundColor(Color.subtleText)
-        }
-        .frame(maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
 #if DEBUG
 struct NetworkActivityView_Previews: PreviewProvider {
     
-    static let url = URL(string: "https://www.google.com/testing?id=69&time=420")!
+    static let url = URL(string: "https://www.google.com/testing/arieboomsma/nogeenlangerpad/dsfijfdoiigfjod/dfsofdgjdfg?id=69&time=420")!
     
     static let id1 = UUID()
     static let id2 = UUID()

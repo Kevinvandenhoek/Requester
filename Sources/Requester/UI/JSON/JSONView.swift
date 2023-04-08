@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct JSONView: View {
-    let json: [String: Any]
+    let json: Any
 
     var body: some View {
         ScrollView {
@@ -22,14 +22,35 @@ struct JSONView: View {
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(Color.subtleText)
                         .onTapGesture {
-                            UIPasteboard.general.string = json.toJSONString
+                            UIPasteboard.general.string = jsonString
                         }
                 }
-                ForEach(json.keys.sorted(), id: \.self) { key in
-                    ExpandableView(key: key, value: json[key]!)
-                }
+                renderData(json)
             }
             .padding()
+        }
+    }
+    
+    @ViewBuilder
+    private func renderData(_ data: Any) -> some View {
+        if let dataDict = json as? [String: Any] {
+            ForEach(dataDict.keys.sorted(), id: \.self) { key in
+                ExpandableView(key: key, value: dataDict[key]!)
+            }
+        } else if let dataArray = json as? [Any] {
+            ForEach(dataArray.indices, id: \.self) { index in
+                ExpandableView(key: "[\(index)]", value: dataArray[index], isExpanded: false)
+            }
+        }
+    }
+    
+    var jsonString: String {
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .withoutEscapingSlashes])
+            return String(data: jsonData, encoding: .utf8) ?? "\(json)"
+        } catch {
+            print("Error converting value to JSON string: \(error.localizedDescription)")
+            return "\(json)"
         }
     }
 }
@@ -151,7 +172,7 @@ struct JSONView_Previews: PreviewProvider {
     
     static var previews: some View {
         ScrollView {
-            JSONView(json: json)
+            JSONView(json: [json, json])
                 .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
         }
     }
