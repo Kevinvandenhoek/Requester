@@ -68,13 +68,13 @@ extension NetworkActivityDetailView {
         keyValueView("Body") {
             Text("some body")
 //            Text(output.data.formattedText)
-//                .font(.system(size: 10))
-//                .padding(.all, 10)
-//                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
-//                .padding(.top, 6)
-//                .onTapGesture {
-//                    UIPasteboard.general.string = output.data.formattedText
-//                }
+                .font(.system(size: 10))
+                .padding(.all, 10)
+                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+                .padding(.top, 6)
+                .onTapGesture {
+                    UIPasteboard.general.string = output.data.formattedText
+                }
         }
     }
     
