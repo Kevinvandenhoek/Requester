@@ -31,9 +31,11 @@ extension NetworkActivityStore: APIRequestDispatchingDelegate {
     public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskPublisher, for urlRequest: URLRequest) {
         var activity = NetworkActivityItem(urlRequest)
         self.activity.insert(activity)
+        print("🐛 created activity: \(activity)")
         
         let updateActivity: (NetworkActivityItem.State) -> Void = { [weak self] state in
             activity.update(to: state)
+            print("🐛 updating state \(state), resulting activity: \(activity)")
             self?.activity.insert(activity)
         }
         
