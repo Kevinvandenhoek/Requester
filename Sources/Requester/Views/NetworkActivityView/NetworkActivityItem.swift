@@ -11,14 +11,15 @@ public struct NetworkActivityItem {
     
     public let date: Date
     public let request: URLRequest
-    public var associatedResults: Set<APIRequestingResult> = []
+    public var associatedResults: Set<APIRequestingResult>
     private(set) var completion: Date?
     private(set) var state: State
     
-    init(_ request: URLRequest, state: State = .inProgress, completion: Date? = nil) {
+    init(_ request: URLRequest, state: State = .inProgress, associatedResults: Set<APIRequestingResult> = [], completion: Date? = nil) {
         self.date = Date()
         self.state = state
         self.request = request
+        self.associatedResults = associatedResults
         self.completion = completion
     }
     

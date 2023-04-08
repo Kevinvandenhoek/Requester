@@ -14,7 +14,7 @@ public struct NetworkActivityView: View {
     
     public var body: some View {
         ScrollView {
-            LazyVStack(spacing: 30) {
+            LazyVStack(spacing: 10) {
                 ForEach(items, id: \.key) { _, value in
                     view(for: value)
                 }
@@ -43,6 +43,18 @@ private extension NetworkActivityView {
         }
     }
     
+    func issuesText(for activity: NetworkActivityItem) -> String {
+        let failedSteps = activity.associatedResults.compactMap({ $0.failedStep })
+        switch failedSteps.count {
+        case 0:
+            return "no processing issues"
+        case 1:
+            return "issue while \(failedSteps[0].description)"
+        default:
+            return "\(failedSteps.count) issues"
+        }
+    }
+    
     func baseUrlText(for activity: NetworkActivityItem) -> String {
         guard let url = activity.request.url,
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return "nil" }
@@ -65,34 +77,66 @@ private extension NetworkActivityView {
     @ViewBuilder
     func view(for activity: NetworkActivityItem) -> some View {
         HStack(spacing: 5) {
+            Capsule()
+                .foregroundColor(indicatorColor(for: activity))
+                .frame(width: 3)
             description(for: activity)
             Spacer()
             status(for: activity)
+        }
+        .padding(.all, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 3)
+                .foregroundColor(Color(.systemGray6))
+        )
+    }
+    
+    func indicatorColor(for activity: NetworkActivityItem) -> Color {
+        if activity.associatedResults.contains(where: { $0.failedStep != nil }) {
+            return Color.red
+        } else {
+            switch activity.state {
+            case .failed:
+                return Color.red
+            case .inProgress:
+                return Color.blue
+            case .succeeded:
+                return Color.green
+            }
         }
     }
     
     @ViewBuilder
     func status(for activity: NetworkActivityItem) -> some View {
-        VStack(alignment: .trailing) {
+        VStack(alignment: .trailing, spacing: 5) {
             Text(statusText(for: activity))
                 .font(.system(size: 10, weight: .bold))
-                .foregroundColor(color(for: activity.state))
+                .foregroundColor(statusColor(for: activity.state))
+            Text(issuesText(for: activity))
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(issuesColor(for: activity))
         }
     }
     
     @ViewBuilder
     func description(for activity: NetworkActivityItem) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(methodText(for: activity) + " | " + baseUrlText(for: activity))
-                .font(.system(size: 10, weight: .bold))
-                .opacity(0.3)
             Text(pathText(for: activity))
                 .font(.system(size: 10, weight: .bold))
+            Text(methodText(for: activity) + " | " + baseUrlText(for: activity))
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(Color(.systemGray2))
         }
         .frame(maxHeight: .infinity, alignment: .topLeading)
     }
     
-    func color(for status: NetworkActivityItem.State) -> Color {
+    func issuesColor(for item: NetworkActivityItem) -> Color {
+        return item.associatedResults.contains(where: { $0.failedStep != nil })
+            ? Color.red
+            :  Color(.systemGray2)
+    }
+    
+    func statusColor(for status: NetworkActivityItem.State) -> Color {
         switch status {
         case .inProgress:
             return .blue
@@ -120,7 +164,19 @@ struct NetworkActivityView_Previews: PreviewProvider {
                 state: .succeeded((
                     data: Data(),
                     response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
-                ))
+                )),
+                associatedResults: [
+                    APIRequestingResult(
+                        request: APIRequestMock(),
+                        failedStep: .dispatching,
+                        error: APIError(type: .general)
+                    ),
+                    APIRequestingResult(
+                        request: APIRequestMock(),
+                        failedStep: nil,
+                        error: nil
+                    )
+                ]
             ),
             NetworkActivityItem(
                 URLRequest(url: url),
@@ -137,4 +193,55 @@ struct NetworkActivityView_Previews: PreviewProvider {
     }
 }
 
+public struct APIRequestMock: APIRequest {
+       
+    public typealias Response = APIRequestResponseMock
+    
+    public let parameters: [String: Any]
+    public let backend: Backend
+    public let cachingGroups: [CachingGroup]
+    public let method: APIMethod
+    public let path: String
+    public let decoder: DataDecoding?
+    public let statusCodeValidation: StatusCodeValidation
+    
+    public init(parameters: [String: Any] = [:], backend: Backend = .stubbed(), cachingGroups: [CachingGroup] = [], method: APIMethod = .get, path: String = "", decoder: DataDecoding? = nil, statusCodeValidation: StatusCodeValidation? = nil) {
+        self.parameters = parameters
+        self.backend = backend
+        self.cachingGroups = cachingGroups
+        self.method = method
+        self.path = path
+        self.decoder = decoder
+        self.statusCodeValidation = statusCodeValidation ?? .default
+    }
+}
+
+public struct APIRequestResponseMock: Codable, Equatable {
+    public let id: String
+    
+    var toData: Data {
+        return try! JSONEncoder().encode(APIRequestResponseMock(id: id))
+    }
+}
+
+public struct CachingGroupMock: CachingGroup {
+    public let id: String
+}
+
+public extension Backend where Self == DefaultBackend {
+    
+    static func stubbed(
+        baseURL: URL = URL(string: "https://www.google.com")!,
+        authenticator: Authenticating? = nil,
+        requestProcessors: [URLRequestProcessing] = [],
+        responseProcessors: [URLResponseProcessing] = []
+    ) -> Self {
+        return Self(
+            baseURL: baseURL,
+            authenticator: authenticator,
+            requestProcessors: requestProcessors,
+            responseProcessors: responseProcessors
+        )
+    }
+}
 #endif

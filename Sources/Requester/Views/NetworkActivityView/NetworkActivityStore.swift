@@ -77,4 +77,21 @@ public enum APIRequestingStep: Hashable {
     case statusCodeValidation
     case decoding
     case mapping
+    
+    var description: String {
+        switch self {
+        case .dispatching:
+            return "dispatching"
+        case .processing:
+            return "processing"
+        case .authorizationValidation:
+            return "validating authorization"
+        case .statusCodeValidation:
+            return "validating status code"
+        case .decoding:
+            return "decoding"
+        case .mapping:
+            return "mapping"
+        }
+    }
 }

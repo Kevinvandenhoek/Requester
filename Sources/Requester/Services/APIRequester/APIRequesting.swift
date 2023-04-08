@@ -23,3 +23,11 @@ protocol APIRequestingActivityDelegate: AnyObject {
     
     func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID)
 }
+
+public extension APIRequesting {
+    
+    /// Will enable viewing network activity with NetworkActivityView. Shortcut to call setup(with: NetworkActivityStore.default).
+    func setupActivityMonitoring() async {
+        await setup(with: .default)
+    }
+}
