@@ -15,19 +15,21 @@ public struct NetworkActivityView: View {
     public var body: some View {
         ScrollView {
             LazyVStack(spacing: 30) {
-                ForEach(items, content: view)
+                ForEach(items, id: \.key) { _, value in
+                    view(for: value)
+                }
             }
             .padding(.all, 25)
         }
-        .background(Color.white)
+        .background(Color(.systemBackground))
     }
 }
 
 private extension NetworkActivityView {
     
-    var items: [NetworkActivityItem] {
+    var items: [(key: UUID, value: NetworkActivityItem)] {
         return store.activity
-            .sorted(by: { $0.date < $1.date })
+            .sorted(by: { $0.value.date < $1.value.date })
     }
     
     func statusText(for activity: NetworkActivityItem) -> String {

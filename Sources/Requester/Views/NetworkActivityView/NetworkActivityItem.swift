@@ -7,9 +7,8 @@
 
 import Foundation
 
-public struct NetworkActivityItem: Identifiable, Hashable {
+public struct NetworkActivityItem {
     
-    public let id: UUID = UUID()
     public let date: Date
     public let request: URLRequest
     private(set) var completion: Date?
@@ -42,14 +41,5 @@ public struct NetworkActivityItem: Identifiable, Hashable {
     public mutating func update(to state: State) {
         self.state = state
         self.completion = Date()
-    }
-    
-    public static func == (lhs: NetworkActivityItem, rhs: NetworkActivityItem) -> Bool {
-        return lhs.id == rhs.id && lhs.state.id == rhs.state.id
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-        hasher.combine(state.id)
     }
 }

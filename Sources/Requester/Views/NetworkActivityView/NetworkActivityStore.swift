@@ -13,12 +13,12 @@ public final class NetworkActivityStore: ObservableObject {
     public static let `default` = NetworkActivityStore()
     
     @Published
-    var activity: Set<NetworkActivityItem>
+    var activity: [UUID: NetworkActivityItem]
     
     private var cancellables: [AnyCancellable] = []
     
-    public init(activity: Set<NetworkActivityItem> = []) {
-        self.activity = activity
+    public init(activity: [NetworkActivityItem] = []) {
+        self.activity = Dictionary(uniqueKeysWithValues: activity.map { (UUID(), $0) })
     }
     
     public func setup(with dispatcher: APIRequestDispatching) async {
@@ -29,12 +29,13 @@ public final class NetworkActivityStore: ObservableObject {
 extension NetworkActivityStore: APIRequestDispatchingDelegate {
     
     public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskPublisher, for urlRequest: URLRequest) {
+        let id = UUID()
         var activity = NetworkActivityItem(urlRequest)
-        self.activity.insert(activity)
+        self.activity[id] = activity
         
         let updateActivity: (NetworkActivityItem.State) -> Void = { [weak self] state in
             activity.update(to: state)
-            self?.activity.insert(activity)
+            self?.activity[id] = activity
         }
         
         publisher
