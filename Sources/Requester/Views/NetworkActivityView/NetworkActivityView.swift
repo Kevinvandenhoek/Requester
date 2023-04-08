@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  NetworkActivityView.swift
 //  
 //
 //  Created by Kevin van den Hoek on 08/04/2023.
@@ -8,11 +8,11 @@
 import Foundation
 import SwiftUI
 
-struct NetworkActivityView: View {
+public struct NetworkActivityView: View {
     
     @StateObject var store: NetworkActivityStore
     
-    var body: some View {
+    public var body: some View {
         ScrollView {
             LazyVStack(spacing: 30) {
                 ForEach(store.activity.sorted(by: { $0.date < $1.date }), content: view)
