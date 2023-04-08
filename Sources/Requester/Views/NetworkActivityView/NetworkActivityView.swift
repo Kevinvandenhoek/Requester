@@ -34,6 +34,7 @@ public struct NetworkActivityView: View {
             }
             .padding(.all, 25)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemBackground))
         }
         
     }
