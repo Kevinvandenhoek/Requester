@@ -22,6 +22,7 @@ public protocol APIRequesting {
 protocol APIRequestingActivityDelegate: AnyObject {
     
     func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID)
+    func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID, previous: APIRequestDispatchID?)
 }
 
 public extension APIRequesting {

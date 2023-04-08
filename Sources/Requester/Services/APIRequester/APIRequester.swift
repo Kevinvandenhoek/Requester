@@ -56,19 +56,39 @@ public actor APIRequester: APIRequesting {
     @discardableResult
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
         var tokenID: TokenID?
-        
+        var dispatchId: APIRequestDispatchID?
         do {
-            return try await execute(request, tokenID: &tokenID, mapper: { $0 })
+            return try await execute(
+                request,
+                tokenID: &tokenID,
+                dispatchId: &dispatchId,
+                previous: nil,
+                mapper: { $0 }
+            )
         } catch let error as APIError {
             switch error.type {
             case .invalidToken(let invalidatedTokenID):
+                let previous = dispatchId
                 guard let authenticator = request.backend.authenticator else { throw error }
                 try await tryTokenRefresh(with: authenticator, tokenID: invalidatedTokenID)
-                return try await execute(request, tokenID: &tokenID, mapper: { $0 })
+                return try await execute(
+                    request,
+                    tokenID: &tokenID,
+                    dispatchId: &dispatchId,
+                    previous: previous,
+                    mapper: { $0 }
+                )
             case .missingToken, .tokenFetchFailure:
+                let previous = dispatchId
                 guard let authenticator = request.backend.authenticator else { throw error }
                 try await tryTokenRefresh(with: authenticator, tokenID: tokenID)
-                    return try await execute(request, tokenID: &tokenID, mapper: { $0 })
+                return try await execute(
+                    request,
+                    tokenID: &tokenID,
+                    dispatchId: &dispatchId,
+                    previous: previous,
+                    mapper: { $0 }
+                )
             default:
                 throw error
             }
@@ -117,7 +137,7 @@ private extension APIRequester {
         try await tokenRefreshDispatcher.performTokenRefresh(with: authenticator, tokenID: tokenID)
     }
     
-    func execute<Request: APIRequest, Mapped>(_ request: Request, tokenID: inout TokenID?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
+    func execute<Request: APIRequest, Mapped>(_ request: Request, tokenID: inout TokenID?, dispatchId: inout APIRequestDispatchID?, previous: APIRequestDispatchID?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
         var urlRequest = try urlRequestMapper.map(request)
         
         try request.backend.requestProcessors.forEach { processor in
@@ -134,7 +154,6 @@ private extension APIRequester {
         }
         
         let urlSession = await urlSessionManager.urlSession(for: request)
-        var dispatchId: APIRequestDispatchID?
         var step: APIRequestingStep = .dispatching
         do {
             let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID, urlSession: urlSession, dispatchId: &dispatchId)

@@ -20,8 +20,8 @@ public final class NetworkActivityStore: ObservableObject {
     
     private var cancellables: [AnyCancellable] = []
     
-    public init(activity: [NetworkActivityItem] = []) {
-        self.activity = Dictionary(uniqueKeysWithValues: activity.map { (UUID(), $0) })
+    public init(activity: [APIRequestDispatchID: NetworkActivityItem] = [:]) {
+        self.activity = activity
     }
     
     public func setup(with dispatcher: APIRequestDispatching) async {
@@ -53,24 +53,30 @@ extension NetworkActivityStore: APIRequestDispatchingDelegate {
 extension NetworkActivityStore: APIRequestingActivityDelegate {
     
     public func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID) {
+        self.requester(requester, didGetResult: result, for: id, previous: nil)
+    }
+    
+    public func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID, previous: APIRequestDispatchID?) {
         activity[id]?.associatedResults.insert(result)
+        if let previous {
+            activity[previous]?.associatedFollowUps.insert(id)
+        }
     }
 }
 
-public struct APIRequestingResult: Hashable {
+public struct APIRequestingResult: Hashable, Identifiable {
     
-    let request: any APIRequest
-    let failedStep: APIRequestingStep?
-    let error: Error?
+    public let id = UUID()
+    public let request: any APIRequest
+    public let failedStep: APIRequestingStep?
+    public let error: Error?
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(HashableAPIRequest(from: request))
-        hasher.combine(failedStep)
+        hasher.combine(id)
     }
     
     public static func == (lhs: APIRequestingResult, rhs: APIRequestingResult) -> Bool {
-        return HashableAPIRequest(from: lhs.request) == HashableAPIRequest(from: rhs.request)
-            && lhs.failedStep == rhs.failedStep
+        return lhs.id == rhs.id
     }
 }
 
