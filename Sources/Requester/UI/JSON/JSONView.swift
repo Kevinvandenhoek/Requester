@@ -73,7 +73,7 @@ private struct ExpandableView: View {
                             .foregroundColor(Color.subtleText)
                             .padding(.leading, 4)
                     } else if let count = arrayElementCount() {
-                        Text("(\(count) item\(count != 1 ? "s" : ""))")
+                        Text("(\(count))")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(Color.subtleText)
                             .padding(.leading, 4)
