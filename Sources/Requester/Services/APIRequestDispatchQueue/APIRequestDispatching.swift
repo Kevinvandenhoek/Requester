@@ -15,4 +15,5 @@ public protocol APIRequestDispatching {
     func throwAllRequests(error: APIError) async
     
     func add(delegate: APIRequestDispatchingDelegate) async
+    func remove(delegate: APIRequestDispatchingDelegate) async
 }

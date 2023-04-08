@@ -36,7 +36,10 @@ public actor APIRequester: APIRequesting {
         self.urlSessionManager = URLSessionManager(urlSessionConfigurationProvider: urlSessionConfigurationProvider, delegate: urlSessionDelegate)
         self.sslPinner = sslPinner
         
-        Task { await sslPinner.setup(with: urlSessionDelegate) }
+        Task {
+            await sslPinner.setup(with: urlSessionDelegate)
+            await NetworkActivityStore.default.setup(with: dispatcher)
+        }
     }
     
     @discardableResult
