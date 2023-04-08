@@ -13,15 +13,29 @@ public struct NetworkActivityView: View {
     @StateObject var store: NetworkActivityStore
     
     public var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 10) {
-                ForEach(items, id: \.key) { _, value in
-                    view(for: value)
+        if store.didSetup {
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    ForEach(items, id: \.key) { _, value in
+                        view(for: value)
+                    }
                 }
+                .padding(.all, 25)
+            }
+            .background(Color(.systemBackground))
+        } else {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("NetworkActivityStore not set up")
+                    .font(.headline)
+                Text("Make sure to call someAPIRequester.setup(with: store)")
+                    .font(.caption)
+                Text("For convenience, you can use APIRequester.default.setupNetworkMonitoring() to set up the default APIRequester with the default activity store.")
+                    .font(.caption)
             }
             .padding(.all, 25)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(Color(.systemBackground))
+        
     }
 }
 

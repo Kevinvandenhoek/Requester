@@ -9,6 +9,8 @@ import Foundation
 
 public actor APIRequester: APIRequesting {
     
+    public let `default` = APIRequester()
+    
     public let urlRequestMapper: URLRequestMapper
     public let dispatcher: APIRequestDispatching
     public let memoryCacher: MemoryCaching

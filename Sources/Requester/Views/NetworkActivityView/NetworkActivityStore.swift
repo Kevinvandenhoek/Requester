@@ -15,6 +15,9 @@ public final class NetworkActivityStore: ObservableObject {
     @Published
     var activity: [APIRequestDispatchID: NetworkActivityItem]
     
+    @Published
+    var didSetup: Bool = false
+    
     private var cancellables: [AnyCancellable] = []
     
     public init(activity: [NetworkActivityItem] = []) {
@@ -23,6 +26,7 @@ public final class NetworkActivityStore: ObservableObject {
     
     public func setup(with dispatcher: APIRequestDispatching) async {
         await dispatcher.add(delegate: self)
+        didSetup = true
     }
 }
 
