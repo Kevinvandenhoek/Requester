@@ -9,7 +9,7 @@ import Foundation
 
 public actor APIRequester: APIRequesting {
     
-    public let `default` = APIRequester()
+    public static let `default` = APIRequester()
     
     public let urlRequestMapper: URLRequestMapper
     public let dispatcher: APIRequestDispatching
