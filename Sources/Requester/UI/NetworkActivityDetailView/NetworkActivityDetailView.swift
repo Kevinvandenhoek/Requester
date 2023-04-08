@@ -15,50 +15,51 @@ struct NetworkActivityDetailView: View {
     let item: NetworkActivityItem
     
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 60) {
-                section("Request") {
-                    VStack(alignment: .leading, spacing: 20) {
-                        keyValue("URL", item.request.url?.absoluteString)
-                        keyValue("Host", item.request.url?.host)
-                        keyValue("Path", item.pathText)
-                        keyValue("Method", item.request.httpMethod)
-                        keyValue("Headers", item.request.allHTTPHeaderFields)
-                    }
-                }
-                section("Response") {
-                    VStack(alignment: .leading, spacing: 20) {
-                        keyValue("Status", item.statusText)
-                        if item.duration != nil {
-                            keyValue("Duration", item.durationText)
-                        }
-                        switch item.state {
-                        case .succeeded(let result):
-                            responseBody(for: result)
-                        case .failed(let error):
-                            errorSection(for: error)
-                        case .inProgress:
-                            EmptyView()
-                        }
-                    }
-                }
-                if item.associatedResults.contains(where: { $0.failedStep != nil }) {
-                    section("Issues") {
-                        ForEach(Array(item.associatedResults.filter({ $0.failedStep != nil }))) { result in
-                            if let failedStep = result.failedStep {
-                                keyValue("Failed step", failedStep.description)
-                            }
-                            if let error = result.error {
-                                errorSection(for: error)
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.all, 25)
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
+        Text("arie")
+//        ScrollView {
+//            VStack(alignment: .leading, spacing: 60) {
+//                section("Request") {
+//                    VStack(alignment: .leading, spacing: 20) {
+//                        keyValue("URL", item.request.url?.absoluteString)
+//                        keyValue("Host", item.request.url?.host)
+//                        keyValue("Path", item.pathText)
+//                        keyValue("Method", item.request.httpMethod)
+//                        keyValue("Headers", item.request.allHTTPHeaderFields)
+//                    }
+//                }
+//                section("Response") {
+//                    VStack(alignment: .leading, spacing: 20) {
+//                        keyValue("Status", item.statusText)
+//                        if item.duration != nil {
+//                            keyValue("Duration", item.durationText)
+//                        }
+//                        switch item.state {
+//                        case .succeeded(let result):
+//                            responseBody(for: result)
+//                        case .failed(let error):
+//                            errorSection(for: error)
+//                        case .inProgress:
+//                            EmptyView()
+//                        }
+//                    }
+//                }
+//                if item.associatedResults.contains(where: { $0.failedStep != nil }) {
+//                    section("Issues") {
+//                        ForEach(Array(item.associatedResults.filter({ $0.failedStep != nil }))) { result in
+//                            if let failedStep = result.failedStep {
+//                                keyValue("Failed step", failedStep.description)
+//                            }
+//                            if let error = result.error {
+//                                errorSection(for: error)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            .padding(.all, 25)
+//            .frame(maxWidth: .infinity, alignment: .leading)
+//        }
+//    }
 }
 
 extension NetworkActivityDetailView {
