@@ -65,18 +65,47 @@ struct NetworkActivityDetailView: View {
     }
 }
 
+private extension NetworkActivityDetailView {
+    
+    var hasParameters: Bool {
+        let containsJson: Bool
+        if let json = item.request.httpBody?.json {
+            if let array = json as? [Any] {
+                containsJson = !array.isEmpty
+            } else if let dict = json as? [String: Any] {
+                containsJson = !dict.isEmpty
+            } else {
+                containsJson = false
+            }
+        } else {
+            containsJson = false
+        }
+        let containsQueryItems: Bool
+        if let url = item.request.url,
+           let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let queryItems = urlComponents.queryItems {
+            containsQueryItems = !queryItems.isEmpty
+        } else {
+            containsQueryItems = false
+        }
+        return containsJson || containsQueryItems
+    }
+}
+
 extension NetworkActivityDetailView {
     
     @ViewBuilder
     func requestParameters(for request: URLRequest) -> some View {
         keyValueView("Parameters") {
             VStack(spacing: 30) {
-                if let json = request.httpBody?.json {
+                if let json = request.httpBody?.json,
+                   ((json as? [Any])?.isEmpty == false || (json as? [String: Any])?.isEmpty == false) {
                     JSONView(json: json)
                 }
                 if let url = request.url,
                    let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
-                   let queryItems = urlComponents.queryItems {
+                   let queryItems = urlComponents.queryItems,
+                   !queryItems.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("QueryItems")
                             .font(.system(size: 24, weight: .bold))
@@ -85,6 +114,11 @@ extension NetworkActivityDetailView {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if !hasParameters {
+                    Text("No parameters")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.subtleText)
                 }
             }
             .padding(.all, 8)
@@ -147,8 +181,14 @@ extension NetworkActivityDetailView {
     func keyValue(_ key: String, _ value: [String: String]?) -> some View {
         keyValueView(key) {
             VStack(alignment: .leading, spacing: 10) {
-                ForEach((value ?? [:]).map({ ($0, $1) }).sorted(by: { $0 < $1 }), id: \.0) { key, value in
-                    keyValue(key, value)
+                if let headers = value, !headers.isEmpty {
+                    ForEach(headers.map({ ($0, $1) }).sorted(by: { $0 < $1 }), id: \.0) { key, value in
+                        keyValue(key, value)
+                    }
+                } else {
+                    Text("No headers")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.subtleText)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

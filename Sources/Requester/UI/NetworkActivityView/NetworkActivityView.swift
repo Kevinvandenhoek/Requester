@@ -16,7 +16,7 @@ public struct NetworkActivityView: View {
         NavigationView {
             if store.didSetup || !store.activity.isEmpty {
                 ScrollView {
-                    LazyVStack(spacing: 10) {
+                    LazyVStack(spacing: 20) {
                         ForEach(items, id: \.key) { _, value in
                             view(for: value)
                         }
@@ -102,7 +102,7 @@ private extension NetworkActivityView {
                     Capsule()
                         .foregroundColor(activity.indicatorColor)
                         .frame(width: 3)
-                    VStack(alignment: .leading, spacing: 5) {
+                    VStack(alignment: .leading, spacing: 6) {
                         HStack(alignment: .top) {
                             Text(activity.pathText)
                                 .font(.system(size: 12, weight: .bold))
@@ -135,6 +135,17 @@ private extension NetworkActivityView {
                                 .font(.system(size: 9, weight: .bold))
                                 .foregroundColor(activity.durationColor)
                                 .multilineTextAlignment(.trailing)
+                        }
+                        HStack {
+                            Text(dateFormatter.string(from: activity.date))
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(Color.subtleText)
+                            Spacer()
+                            if let completion = activity.completion {
+                                Text(dateFormatter.string(from: completion))
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(Color.subtleText)
+                            }
                         }
                     }
                 }
@@ -196,3 +207,9 @@ struct NetworkActivityView_Previews: PreviewProvider {
     }
 }
 #endif
+
+private let dateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "H:mm:ss.SSS"
+    return formatter
+}()
