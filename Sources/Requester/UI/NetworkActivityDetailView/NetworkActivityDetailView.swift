@@ -44,18 +44,16 @@ struct NetworkActivityDetailView: View {
                     }
                 }
                 section("Usage") {
-                    VStack(alignment: .leading, spacing: 30) {
-                        keyValue("Consumers", "\(item.associatedResults.count)")
-                        if item.associatedResults.contains(where: { $0.failedStep != nil }) {
-                            section("Issues") {
-                                ForEach(Array(item.associatedResults.filter({ $0.failedStep != nil }))) { result in
-                                    if let failedStep = result.failedStep {
-                                        keyValue("Failed step", failedStep.description)
-                                    }
-                                    if let error = result.error {
-                                        errorSection(for: error)
-                                    }
-                                }
+                    keyValue("Consumers", "\(item.associatedResults.count)")
+                }
+                if item.associatedResults.contains(where: { $0.failedStep != nil }) {
+                    section("Issues") {
+                        ForEach(Array(item.associatedResults.filter({ $0.failedStep != nil }))) { result in
+                            if let failedStep = result.failedStep {
+                                keyValue("Failed step", failedStep.description)
+                            }
+                            if let error = result.error {
+                                errorSection(for: error)
                             }
                         }
                     }
