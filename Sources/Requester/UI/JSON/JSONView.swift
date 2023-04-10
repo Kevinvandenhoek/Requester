@@ -12,22 +12,19 @@ struct JSONView: View {
     let json: Any
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top) {
-                    Text("JSON")
-                        .font(.system(size: 24, weight: .bold))
-                    Spacer()
-                    Text("copy")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Color.subtleText)
-                        .onTapGesture {
-                            UIPasteboard.general.string = jsonString
-                        }
-                }
-                renderData(json)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                Text("JSON")
+                    .font(.system(size: 24, weight: .bold))
+                Spacer()
+                Text("copy")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Color.subtleText)
+                    .onTapGesture {
+                        UIPasteboard.general.string = jsonString
+                    }
             }
-            .padding()
+            renderData(json)
         }
     }
     

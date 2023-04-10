@@ -21,9 +21,10 @@ public struct NetworkActivityView: View {
                             view(for: value)
                         }
                     }
-                    .padding(.all, 25)
+                    .padding(.all, 14)
                 }
                 .background(Color(.systemBackground))
+                .navigationTitle("Network Activity")
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("NetworkActivityStore not set up")
@@ -32,8 +33,11 @@ public struct NetworkActivityView: View {
                         .font(.caption)
                     Text("For convenience, you can use APIRequester.default.setupNetworkMonitoring() to set up the default APIRequester with the default activity store.")
                         .font(.caption)
+                    Spacer()
                 }
-                .padding(.all, 25)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .navigationTitle("Network Activity")
+                .padding(.all, 17)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(.systemBackground))
