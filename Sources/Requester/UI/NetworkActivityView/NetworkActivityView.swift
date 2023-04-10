@@ -53,7 +53,7 @@ private extension NetworkActivityView {
             .filter({ key, value in
                 return !appearsInFollowUp(key)
             })
-            .sorted(by: { $0.value.date < $1.value.date })
+            .sorted(by: { $0.value.date > $1.value.date })
     }
     
     func appearsInFollowUp(_ id: UUID) -> Bool {
