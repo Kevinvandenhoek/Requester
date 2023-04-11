@@ -131,12 +131,16 @@ extension NetworkActivityDetailView {
     func responseBody(for data: Data) -> some View {
         keyValueView("Body") {
             ZStack(alignment: .topLeading) {
-                if let json = data.json {
+                if let json = data.json,
+                   ((json as? [Any])?.isEmpty == false || (json as? [String: Any])?.isEmpty == false) {
                     JSONView(json: json)
-                } else {
-                    Text(String(data: data, encoding: .utf8) ?? "")
+                } else if let text = String(data: data, encoding: .utf8), !text.isEmpty {
+                    Text(text)
                         .font(.system(size: 10))
-                        .padding(.all, 10)
+                } else {
+                    Text("No response body")
+                        .font(.system(size: 12))
+                        .foregroundColor(Color.subtleText)
                 }
             }
             .padding(.all, 8)

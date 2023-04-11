@@ -151,10 +151,12 @@ struct JSONView_Previews: PreviewProvider {
         "name": "John Doe",
         "age": 30,
         "isStudent": false,
-        "courses": [
-            "Math",
-            "Physics"
-        ],
+        "modifiable": [
+            "breakfast": true,
+            "dates": true,
+            "guests": true,
+            "services": true
+          ],
         "address": [
             "business": [
                 "city": "New York",
