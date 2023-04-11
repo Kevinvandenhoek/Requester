@@ -33,33 +33,41 @@ public final class NetworkActivityStore: ObservableObject {
 extension NetworkActivityStore: APIRequestDispatchingDelegate {
     
     public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskPublisher, for urlRequest: URLRequest, id: APIRequestDispatchID) {
-        var activity = NetworkActivityItem(urlRequest)
-        self.activity[id] = activity
-        
-        let updateActivity: (NetworkActivityItem.State) -> Void = { [weak self] state in
-            activity.update(to: state)
-            self?.activity[id] = activity
+        DispatchQueue.main.async {
+            var activity = NetworkActivityItem(urlRequest)
+            self.activity[id] = activity
+            
+            let updateActivity: (NetworkActivityItem.State) -> Void = { [weak self] state in
+                activity.update(to: state)
+                DispatchQueue.main.async {
+                    self?.activity[id] = activity
+                }
+            }
+            
+            publisher
+                .receive(on: DispatchQueue.main)
+                .map(NetworkActivityItem.State.succeeded)
+                .catch { Just(NetworkActivityItem.State.failed($0)) }
+                .sink(receiveValue: updateActivity)
+                .store(in: &self.cancellables)
         }
-        
-        publisher
-            .receive(on: DispatchQueue.main)
-            .map(NetworkActivityItem.State.succeeded)
-            .catch { Just(NetworkActivityItem.State.failed($0)) }
-            .sink(receiveValue: updateActivity)
-            .store(in: &self.cancellables)
     }
 }
 
 extension NetworkActivityStore: APIRequestingActivityDelegate {
     
     public func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID) {
-        self.requester(requester, didGetResult: result, for: id, previous: nil)
+        DispatchQueue.main.async {
+            self.requester(requester, didGetResult: result, for: id, previous: nil)
+        }
     }
     
     public func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID, previous: APIRequestDispatchID?) {
-        activity[id]?.associatedResults.insert(result)
-        if let previous {
-            activity[previous]?.associatedFollowUps.insert(id)
+        DispatchQueue.main.async {
+            self.activity[id]?.associatedResults.insert(result)
+            if let previous {
+                self.activity[previous]?.associatedFollowUps.insert(id)
+            }
         }
     }
 }

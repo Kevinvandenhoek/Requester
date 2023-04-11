@@ -21,7 +21,7 @@ public struct NetworkActivityView: View {
                             view(for: value)
                         }
                     }
-                    .padding(.all, 14)
+                    .padding(.horizontal, 14)
                 }
                 .background(Color(.systemBackground))
                 .navigationTitle("Network Activity")
