@@ -9,7 +9,13 @@ import Foundation
 import SwiftUI
 
 struct JSONView: View {
+    let data: Data
     let json: Any
+    
+    init(data: Data) {
+        self.data = data
+        self.json = data.json
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -26,6 +32,7 @@ struct JSONView: View {
             }
             renderData(json)
         }
+        .multilineTextAlignment(.leading)
     }
     
     @ViewBuilder
@@ -38,6 +45,9 @@ struct JSONView: View {
             ForEach(dataArray.indices, id: \.self) { index in
                 ExpandableView(key: "[\(index)]", value: dataArray[index], isExpanded: false)
             }
+        } else if let string = String(data: self.data, encoding: .utf8) {
+            Text(string)
+                .font(.system(size: 12, weight: .bold))
         }
     }
     
@@ -46,8 +56,8 @@ struct JSONView: View {
             let jsonData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .withoutEscapingSlashes])
             return String(data: jsonData, encoding: .utf8) ?? "\(json)"
         } catch {
-            print("Error converting value to JSON string: \(error.localizedDescription)")
-            return "\(json)"
+            return String(data: data, encoding: .utf8)
+                ?? "Requester.Error: Could not parse data to string for copying"
         }
     }
 }
@@ -61,6 +71,18 @@ private struct ExpandableView: View {
         self.key = key
         self.value = value
         self._isExpanded = State(initialValue: isExpanded)
+    }
+    
+    var valueText: String? {
+        if value as? [String: Any] != nil {
+            return nil
+        } else if let bool = value as? Bool {
+            return String(describing: bool)
+        } else if let count = arrayElementCount() {
+            return "(\(count))"
+        } else {
+            return String(describing: value)
+        }
     }
 
     var body: some View {
@@ -85,13 +107,8 @@ private struct ExpandableView: View {
                     }
                     Text("\(key):")
                         .font(.system(size: 12, weight: .bold))
-                    if !isExpandable() {
-                        Text(String(describing: value))
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Color.subtleText)
-                            .padding(.leading, 4)
-                    } else if let count = arrayElementCount() {
-                        Text("(\(count))")
+                    if let valueText {
+                        Text(valueText)
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(Color.subtleText)
                             .padding(.leading, 4)
@@ -133,16 +150,6 @@ private struct ExpandableView: View {
     }
 }
 
-private extension [String: Any] {
-    var toJSONString: String {
-        if let jsonData = try? JSONSerialization.data(withJSONObject: self, options: [.prettyPrinted, .withoutEscapingSlashes]) {
-            return String(data: jsonData, encoding: .utf8) ?? "bad json"
-        } else {
-            return "bad json"
-        }
-    }
-}
-
 #if DEBUG
 
 struct JSONView_Previews: PreviewProvider {
@@ -171,7 +178,7 @@ struct JSONView_Previews: PreviewProvider {
     
     static var previews: some View {
         ScrollView {
-            JSONView(json: [json, json])
+            JSONView(data: try! JSONSerialization.data(withJSONObject: [json, json], options: [.prettyPrinted, .withoutEscapingSlashes]))
                 .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
         }
     }

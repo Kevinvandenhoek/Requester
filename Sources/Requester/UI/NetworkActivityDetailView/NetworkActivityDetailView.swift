@@ -98,9 +98,10 @@ extension NetworkActivityDetailView {
     func requestParameters(for request: URLRequest) -> some View {
         keyValueView("Parameters") {
             VStack(spacing: 30) {
-                if let json = request.httpBody?.json,
+                if let data = request.httpBody,
+                    let json = data.json,
                    ((json as? [Any])?.isEmpty == false || (json as? [String: Any])?.isEmpty == false) {
-                    JSONView(json: json)
+                    JSONView(data: data)
                 }
                 if let url = request.url,
                    let urlComponents = URLComponents(url: url, resolvingAgainstBaseURL: false),
@@ -133,7 +134,7 @@ extension NetworkActivityDetailView {
             ZStack(alignment: .topLeading) {
                 if let json = data.json,
                    ((json as? [Any])?.isEmpty == false || (json as? [String: Any])?.isEmpty == false) {
-                    JSONView(json: json)
+                    JSONView(data: data)
                 } else if let text = String(data: data, encoding: .utf8), !text.isEmpty {
                     Text(text)
                         .font(.system(size: 10))
