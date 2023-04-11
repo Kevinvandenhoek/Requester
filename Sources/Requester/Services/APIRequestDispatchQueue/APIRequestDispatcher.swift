@@ -30,8 +30,8 @@ public actor APIRequestDispatcher: APIRequestDispatching {
             createPublisher: { _ in
                 let publisher = urlSession
                     .dataTaskPublisher(for: urlRequest)
-                let id = count
                 count += 1
+                let id = count
                 delegates.compactMap({ $0() }).forEach { delegate in
                     delegate?.requestDispatcher(self, didCreate: publisher, for: urlRequest, id: id)
                 }

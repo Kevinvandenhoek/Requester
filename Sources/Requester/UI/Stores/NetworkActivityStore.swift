@@ -62,10 +62,8 @@ extension NetworkActivityStore: APIRequestingActivityDelegate {
     
     public func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID, previous: APIRequestDispatchID?) {
         DispatchQueue.main.async {
-            print("🐛 updating activity id \(id) with assicatedResult, found activity: \(self.activity[id] != nil)")
             self.activity[id]?.associatedResults.insert(result)
             if let previous {
-                print("🐛 updating previous activity id \(previous) with assicatedResult, found activity: \(self.activity[previous] != nil)")
                 self.activity[previous]?.associatedFollowUps.insert(id)
             }
         }
