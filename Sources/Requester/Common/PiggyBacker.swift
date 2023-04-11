@@ -8,31 +8,39 @@
 import Foundation
 import Combine
 
-public actor PiggyBacker<HashKey: Hashable, P: Publisher> {
+public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
     
     private(set) var inFlights: [HashKey: InFlight] = [:]
     
     public init() { }
     
     @discardableResult
-    public func dispatch(_ key: HashKey, id: inout UUID?, createPublisher: (UUID, HashKey) -> P) async throws -> P.Output {
+    public func dispatch(_ key: HashKey, id: inout ID?, createPublisher: (HashKey) -> (id: ID, publisher: P)) async throws -> P.Output {
         defer { Task { await cleanCompletedInFlights() } }
         
         if let existing = inFlights[key], !existing.didComplete {
             id = existing.id
             return try await existing.attach()
         } else {
-            id = UUID()
-            let inflight = InFlight(for: createPublisher(id!, key), id: id!)
+            let (newID, publisher) = createPublisher(key)
+            id = newID
+            let inflight = InFlight(id: newID, publisher: publisher)
             inFlights[key] = inflight
             return try await inflight.attach()
         }
     }
     
     @discardableResult
-    public func dispatch(_ key: HashKey, createPublisher: (UUID, HashKey) -> P) async throws -> P.Output {
-        var id: UUID?
-        return try await dispatch(key, id: &id, createPublisher: createPublisher)
+    public func dispatch(_ key: HashKey, createPublisher: (HashKey) -> P) async throws -> P.Output {
+        defer { Task { await cleanCompletedInFlights() } }
+        
+        if let existing = inFlights[key], !existing.didComplete {
+            return try await existing.attach()
+        } else {
+            let inflight = InFlight(id: nil, publisher: createPublisher(key))
+            inFlights[key] = inflight
+            return try await inflight.attach()
+        }
     }
     
     public func throwInFlights(where condition: (HashKey) -> Bool, error: APIError) async {
@@ -64,7 +72,7 @@ public extension PiggyBacker {
     
     final class InFlight {
         
-        let id: UUID
+        let id: ID?
         var didComplete: Bool { riders <= 0 && publisherFinished }
         
         private var publisherFinished = false
@@ -74,7 +82,7 @@ public extension PiggyBacker {
         private let subject: PassthroughSubject<P.Output, Error>
         private var storedValue: P.Output?
         
-        fileprivate init(for publisher: P, id: UUID) {
+        fileprivate init(id: ID?, publisher: P) {
             self.id = id
             subject = PassthroughSubject()
             publisher

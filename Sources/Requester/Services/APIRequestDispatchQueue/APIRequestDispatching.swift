@@ -7,7 +7,7 @@
 
 import Foundation
 
-public typealias APIRequestDispatchID = UUID
+public typealias APIRequestDispatchID = Int
 
 public protocol APIRequestDispatching {
     

@@ -14,15 +14,15 @@ public protocol TokenRefreshDispatching {
 
 public actor TokenRefreshDispatcher: TokenRefreshDispatching {
     
-    private let piggyBacker: PiggyBacker<TokenID, Future<Void, Error>>
+    private let piggyBacker: PiggyBacker<TokenID, Future<Void, Error>, Int>
     
-    public init(piggyBacker: PiggyBacker<TokenID, Future<Void, Error>> = .init()) {
+    public init(piggyBacker: PiggyBacker<TokenID, Future<Void, Error>, Int> = .init()) {
         self.piggyBacker = piggyBacker
     }
     
     public func performTokenRefresh(with authenticator: Authenticating, tokenID: TokenID?) async throws {
         let dispatchID = tokenID ?? String(describing: type(of: authenticator))
-        return try await piggyBacker.dispatch(dispatchID) { _, dispatchID in
+        return try await piggyBacker.dispatch(dispatchID) { _ in
             return Future<Void, Error>() { promise in
                 Task {
                     do {

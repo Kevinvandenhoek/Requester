@@ -10,6 +10,7 @@ import SwiftUI
 
 public struct NetworkActivityItem {
     
+    public let id: APIRequestDispatchID
     public let date: Date
     public let request: URLRequest
     public var associatedResults: Set<APIRequestingResult>
@@ -18,7 +19,8 @@ public struct NetworkActivityItem {
     private(set) var completion: Date?
     private(set) var state: State
     
-    init(_ request: URLRequest, state: State = .inProgress, associatedResults: Set<APIRequestingResult> = [], associatedFollowUps: Set<APIRequestDispatchID> = [], completion: Date? = nil) {
+    init(_ request: URLRequest, id: APIRequestDispatchID, state: State = .inProgress, associatedResults: Set<APIRequestingResult> = [], associatedFollowUps: Set<APIRequestDispatchID> = [], completion: Date? = nil) {
+        self.id = id
         self.date = Date()
         self.state = state
         self.request = request

@@ -17,7 +17,7 @@ struct NetworkActivityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 60) {
-                section("Request") {
+                section("Request #\(item.id)") {
                     VStack(alignment: .leading, spacing: 20) {
                         keyValue("URL", item.request.url?.absoluteString)
                         keyValue("Host", item.request.url?.host)
@@ -208,7 +208,7 @@ extension NetworkActivityDetailView {
 struct NetworkActivityDetailView_Previews: PreviewProvider {
     
     static let url = URL(string: "https://www.google.com/testing?id=69&time=420")!
-    static let id = UUID()
+    static let id = 1
     static let request = {
         var request = URLRequest(url: url)
         request.setValue("true", forHTTPHeaderField: "isTestFlight")
@@ -229,6 +229,7 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
             NetworkActivityDetailView(
                 item: NetworkActivityItem(
                     request,
+                    id: id,
                     state: .succeeded((
                         data: String.largeJSON.toJSON!,
                         response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!

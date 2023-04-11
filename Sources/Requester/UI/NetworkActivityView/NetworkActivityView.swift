@@ -48,6 +48,22 @@ public struct NetworkActivityView: View {
 
 private extension NetworkActivityView {
     
+    func idText(for activity: NetworkActivityItem) -> String {
+        let activities = [activity.id] + Array(activity
+            .associatedFollowUps.sorted(by: { $0 < $1 }))
+        return "#\(activities.map({ "\($0)" }).joined(separator: ", #"))"
+    }
+    
+    func timeAgoText(for activity: NetworkActivityItem) -> String {
+        let item = activity.associatedFollowUps.compactMap({ store.activity[$0] })
+            .sorted(by: { ($0.completion ?? Date.distantPast) < ($1.completion ?? Date.distantPast) })
+            .first ?? activity
+        guard let finishTime = item.completion else { return "" }
+        let timeDifference = Date().timeIntervalSince(finishTime)
+        let timeAgoText = dateComponentsFormatter.string(from: timeDifference)
+        return timeAgoText.map { "\($0) ago" } ?? ""
+    }
+    
     var items: [(key: APIRequestDispatchID, value: NetworkActivityItem)] {
         return store.activity
             .filter({ key, value in
@@ -56,7 +72,7 @@ private extension NetworkActivityView {
             .sorted(by: { $0.value.date > $1.value.date })
     }
     
-    func appearsInFollowUp(_ id: UUID) -> Bool {
+    func appearsInFollowUp(_ id: APIRequestDispatchID) -> Bool {
         return store.activity.contains(where: { _, value in
             return value.associatedFollowUps.contains(id)
         })
@@ -76,18 +92,33 @@ private extension NetworkActivityView {
     
     @ViewBuilder
     func view(for activity: NetworkActivityItem) -> some View {
-        VStack {
-            content(for: activity)
-            ForEach(followUps(for: activity), id: \.key) { key, value in
-                DottedSeparator()
-                content(for: value)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(idText(for: activity))
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(.secondaryLabel))
+                        .padding(.leading, 5)
+                    Spacer()
+                    Text(timeAgoText(for: activity))
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(.secondaryLabel))
+                        .padding(.trailing, 5)
+                }
+                VStack {
+                    content(for: activity)
+                    ForEach(followUps(for: activity), id: \.key) { key, value in
+                        DottedSeparator()
+                        content(for: value)
+                    }
+                }
+                .padding(.all, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 3)
+                        .foregroundColor(Color(.systemGray6))
+                )
             }
         }
-        .padding(.all, 5)
-        .background(
-            RoundedRectangle(cornerRadius: 3)
-                .foregroundColor(Color(.systemGray6))
-        )
     }
     
     @ViewBuilder
@@ -159,18 +190,20 @@ struct NetworkActivityView_Previews: PreviewProvider {
     
     static let url = URL(string: "https://www.google.com/testing/arieboomsma/nogeenlangerpad/dsfijfdoiigfjod/dfsofdgjdfg?id=69&time=420")!
     
-    static let id1 = UUID()
-    static let id2 = UUID()
-    static let id3 = UUID()
-    static let id4 = UUID()
+    static let id1 = 1
+    static let id2 = 2
+    static let id3 = 3
+    static let id4 = 4
     
     static var previews: some View {
         NetworkActivityView(store: NetworkActivityStore(activity: [
             id1: NetworkActivityItem(
-                URLRequest(url: url)
+                URLRequest(url: url),
+                id: id1
             ),
             id2: NetworkActivityItem(
                 URLRequest(url: url),
+                id: id2,
                 state: .succeeded((
                     data: Data(),
                     response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
@@ -188,20 +221,22 @@ struct NetworkActivityView_Previews: PreviewProvider {
                     )
                 ],
                 associatedFollowUps: [id3],
-                completion: Date().addingTimeInterval(4.1345398)
+                completion: Date().addingTimeInterval(-454.1345398)
             ),
             id3: NetworkActivityItem(
                 URLRequest(url: url),
+                id: id3,
                 state: .succeeded((
                     data: Data(),
                     response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
                 )),
-                completion: Date().addingTimeInterval(1.1345398)
+                completion: Date().addingTimeInterval(-134.1345398)
             ),
             id4: NetworkActivityItem(
                 URLRequest(url: url),
+                id: id4,
                 state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
-                completion: Date().addingTimeInterval(0.1345398)
+                completion: Date().addingTimeInterval(-30.1345398)
             )
         ]))
     }
@@ -212,4 +247,12 @@ private let dateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "H:mm:ss.SSS"
     return formatter
+}()
+
+private let dateComponentsFormatter = {
+    let componentsFormatter = DateComponentsFormatter()
+    componentsFormatter.allowedUnits = [.second, .minute, .hour, .day, .weekOfMonth, .month, .year]
+    componentsFormatter.maximumUnitCount = 2
+    componentsFormatter.unitsStyle = .abbreviated
+    return componentsFormatter
 }()

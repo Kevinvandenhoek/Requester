@@ -12,11 +12,13 @@ public actor APIRequestDispatcher: APIRequestDispatching {
     
     public typealias HashKey = APIRequestDispatchHashable
     
-    private let piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskPublisher>
+    private let piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskPublisher, APIRequestDispatchID>
     
     private var delegates: [() -> APIRequestDispatchingDelegate?] = []
     
-    public init(piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskPublisher> = .init()) {
+    private var count: Int = 0
+    
+    public init(piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskPublisher, APIRequestDispatchID> = .init()) {
         self.piggyBacker = piggyBacker
     }
     
@@ -25,13 +27,15 @@ public actor APIRequestDispatcher: APIRequestDispatching {
         return try await piggyBacker.dispatch(
             HashKey(urlRequest, apiRequest, tokenID: tokenID),
             id: &dispatchId,
-            createPublisher: { id, _ in
+            createPublisher: { _ in
                 let publisher = urlSession
                     .dataTaskPublisher(for: urlRequest)
+                let id = count
+                count += 1
                 delegates.compactMap({ $0() }).forEach { delegate in
                     delegate?.requestDispatcher(self, didCreate: publisher, for: urlRequest, id: id)
                 }
-                return publisher
+                return (id: id, publisher: publisher)
             }
         )
     }
