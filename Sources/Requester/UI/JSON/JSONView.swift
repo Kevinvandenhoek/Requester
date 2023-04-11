@@ -14,7 +14,7 @@ struct JSONView: View {
     
     init(data: Data) {
         self.data = data
-        self.json = data.json
+        self.json = data.json as Any
     }
 
     var body: some View {
@@ -23,12 +23,23 @@ struct JSONView: View {
                 Text("JSON")
                     .font(.system(size: 24, weight: .bold))
                 Spacer()
-                Text("copy")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(Color.subtleText)
-                    .onTapGesture {
-                        UIPasteboard.general.string = jsonString
-                    }
+                HStack {
+                    Text("copy")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(Color.subtleText)
+                        .onTapGesture {
+                            UIPasteboard.general.string = jsonString
+                        }
+                    Color.subtleText
+                        .frame(width: 1.5, height: 11)
+                        .padding(.top, 1)
+                    Text("copy raw")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(Color.subtleText)
+                        .onTapGesture {
+                            UIPasteboard.general.string = rawJsonString
+                        }
+                }
             }
             renderData(json)
         }
@@ -51,14 +62,16 @@ struct JSONView: View {
         }
     }
     
-    var jsonString: String {
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .withoutEscapingSlashes])
-            return String(data: jsonData, encoding: .utf8) ?? "\(json)"
-        } catch {
-            return String(data: data, encoding: .utf8)
-                ?? "Requester.Error: Could not parse data to string for copying"
+    var jsonString: String? {
+        guard let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .withoutEscapingSlashes]) else {
+            return nil
         }
+        return String(data: jsonData, encoding: .utf8)
+    }
+    
+    var rawJsonString: String {
+        return String(data: data, encoding: .utf8)
+            ?? "Requester.Error: Could not parse data to string for copying"
     }
 }
 
