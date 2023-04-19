@@ -8,17 +8,19 @@
 import Foundation
 import Combine
 
+public typealias MultiCastDataTaskPublisher = Publishers.Autoconnect<Publishers.Multicast<URLSession.DataTaskPublisher, PassthroughSubject<(data: Data, response: URLResponse), URLError>>>
+
 public actor APIRequestDispatcher: APIRequestDispatching {
     
     public typealias HashKey = APIRequestDispatchHashable
     
-    private let piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskPublisher, APIRequestDispatchID>
+    private let piggyBacker: PiggyBacker<HashKey, MultiCastDataTaskPublisher, APIRequestDispatchID>
     
     private var delegates: [() -> APIRequestDispatchingDelegate?] = []
     
     private var count: Int = 0
     
-    public init(piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskPublisher, APIRequestDispatchID> = .init()) {
+    public init(piggyBacker: PiggyBacker<HashKey, MultiCastDataTaskPublisher, APIRequestDispatchID> = .init()) {
         self.piggyBacker = piggyBacker
     }
     
@@ -30,6 +32,10 @@ public actor APIRequestDispatcher: APIRequestDispatching {
             createPublisher: { _ in
                 let publisher = urlSession
                     .dataTaskPublisher(for: urlRequest)
+                    .multicast {
+                        PassthroughSubject<(data: Data, response: URLResponse), URLError>()
+                    }
+                    .autoconnect()
                 count += 1
                 let id = count
                 delegates.compactMap({ $0() }).forEach { delegate in
