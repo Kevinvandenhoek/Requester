@@ -37,6 +37,11 @@ public struct DataDecoder: DataDecoding {
                 throw APIError(type: .decoding)
             }
             return bool
+        } else if Value.self == Data.self {
+            guard let data = data as? Value else {
+                throw APIError(type: .decoding)
+            }
+            return data
         } else {
             do {
                 return try jsonDecoder.decode(Value.self, from: data)
