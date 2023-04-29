@@ -55,6 +55,11 @@ public actor APIRequester: APIRequesting {
     
     @discardableResult
     public func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
+        return try await perform(request, mapper: { $0 })
+    }
+    
+    @discardableResult
+    public func perform<Request: APIRequest, Mapped>(_ request: Request, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
         var tokenID: TokenID?
         var dispatchId: APIRequestDispatchID?
         do {
@@ -63,7 +68,7 @@ public actor APIRequester: APIRequesting {
                 tokenID: &tokenID,
                 dispatchId: &dispatchId,
                 previous: nil,
-                mapper: { $0 }
+                mapper: mapper
             )
         } catch let error as APIError {
             switch error.type {
@@ -76,7 +81,7 @@ public actor APIRequester: APIRequesting {
                     tokenID: &tokenID,
                     dispatchId: &dispatchId,
                     previous: previous,
-                    mapper: { $0 }
+                    mapper: mapper
                 )
             case .missingToken, .tokenFetchFailure:
                 let previous = dispatchId
@@ -87,7 +92,7 @@ public actor APIRequester: APIRequesting {
                     tokenID: &tokenID,
                     dispatchId: &dispatchId,
                     previous: previous,
-                    mapper: { $0 }
+                    mapper: mapper
                 )
             default:
                 throw error
@@ -112,8 +117,7 @@ public actor APIRequester: APIRequesting {
         if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: maxCacheLifetime) {
             return cached
         } else {
-            let response = try await perform(request)
-            let mapped = try mapper(response)
+            let mapped = try await perform(request, mapper: mapper)
             await memoryCacher.store(request: request, model: mapped)
             return mapped
         }
