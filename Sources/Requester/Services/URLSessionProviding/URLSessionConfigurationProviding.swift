@@ -7,6 +7,8 @@
 
 import Foundation
 
+public typealias URLSessionID = String
+
 public protocol URLSessionConfigurationProviding {
-    func make<Request: APIRequest>(for request: Request) -> URLSessionConfiguration
+    func make<Request: APIRequest>(for request: Request) -> (URLSessionConfiguration, URLSessionID?)
 }

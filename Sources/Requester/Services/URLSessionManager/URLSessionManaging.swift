@@ -15,7 +15,7 @@ protocol URLSessionManaging {
 actor URLSessionManager: URLSessionManaging {
     
     private let urlSessionConfigurationProvider: URLSessionConfigurationProviding
-    private var urlSessions: [URLSessionConfiguration: Item] = [:]
+    private var urlSessions: [URLSessionHashKey: Item] = [:]
     private weak var delegate: URLSessionDelegate?
     
     init(urlSessionConfigurationProvider: URLSessionConfigurationProviding = URLSessionConfigurationProvider(), delegate: URLSessionDelegate?) {
@@ -24,12 +24,13 @@ actor URLSessionManager: URLSessionManaging {
     }
     
     func urlSession<Request: APIRequest>(for request: Request) async -> URLSession {
-        let config = urlSessionConfigurationProvider.make(for: request)
-        if let existing = urlSessions[config] {
+        let (config, id) = urlSessionConfigurationProvider.make(for: request)
+        let hashKey = URLSessionHashKey(config, id: id)
+        if let existing = urlSessions[hashKey] {
             return existing.urlSession
         } else {
             let newItem = Item(config: config, delegate: delegate)
-            urlSessions[config] = newItem
+            urlSessions[hashKey] = newItem
             return newItem.urlSession
         }
     }
@@ -48,5 +49,16 @@ extension URLSessionManager {
             self.config = config
             self.delegate = delegate
         }
+    }
+}
+
+private struct URLSessionHashKey: Hashable {
+    
+    let configuration: URLSessionConfiguration
+    let id: URLSessionID?
+    
+    init(_ configuration: URLSessionConfiguration, id: URLSessionID? = nil) {
+        self.configuration = configuration
+        self.id = id
     }
 }

@@ -11,7 +11,7 @@ public struct URLSessionConfigurationProvider: URLSessionConfigurationProviding 
     
     public init() { }
     
-    public func make<Request: APIRequest>(for request: Request) -> URLSessionConfiguration {
-        return URLSession.shared.configuration
+    public func make<Request: APIRequest>(for request: Request) -> (URLSessionConfiguration, URLSessionID?) {
+        return (URLSession.shared.configuration, nil)
     }
 }
