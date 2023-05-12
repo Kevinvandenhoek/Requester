@@ -38,16 +38,16 @@ actor URLSessionManager: URLSessionManaging {
 
 extension URLSessionManager {
     
-    private class Item: NSObject, URLSessionDelegate {
+    private struct Item {
         
-        lazy var urlSession: URLSession = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
-        
+        let urlSession: URLSession
         let config: URLSessionConfiguration
         weak var delegate: URLSessionDelegate?
         
         init(config: URLSessionConfiguration, delegate: URLSessionDelegate?) {
             self.config = config
             self.delegate = delegate
+            self.urlSession = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
         }
     }
 }
