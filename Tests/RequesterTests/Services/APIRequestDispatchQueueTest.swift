@@ -12,7 +12,7 @@ import XCTest
 final class APIRequestDispatcherTest: XCTestCase {
     
     var sut: APIRequestDispatcher!
-    var piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, MultiCastDataTaskPublisher, APIRequestDispatchID>()
+    var piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, URLSession.DataTaskFuture, APIRequestDispatchID>()
     let urlRequestMapper = URLRequestMapper()
     lazy var urlSession: URLSession = {
         let configuration = URLSessionConfiguration.default
@@ -23,7 +23,7 @@ final class APIRequestDispatcherTest: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, MultiCastDataTaskPublisher, APIRequestDispatchID>()
+        piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, URLSession.DataTaskFuture, APIRequestDispatchID>()
         sut = APIRequestDispatcher(piggyBacker: piggyBacker)
     }
     

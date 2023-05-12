@@ -14,13 +14,13 @@ public actor APIRequestDispatcher: APIRequestDispatching {
     
     public typealias HashKey = APIRequestDispatchHashable
     
-    private let piggyBacker: PiggyBacker<HashKey, MultiCastDataTaskPublisher, APIRequestDispatchID>
+    private let piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskFuture, APIRequestDispatchID>
     
     private var delegates: [() -> APIRequestDispatchingDelegate?] = []
     
     private var count: Int = 0
     
-    public init(piggyBacker: PiggyBacker<HashKey, MultiCastDataTaskPublisher, APIRequestDispatchID> = .init()) {
+    public init(piggyBacker: PiggyBacker<HashKey, URLSession.DataTaskFuture, APIRequestDispatchID> = .init()) {
         self.piggyBacker = piggyBacker
     }
     
@@ -31,11 +31,7 @@ public actor APIRequestDispatcher: APIRequestDispatching {
             id: &dispatchId,
             createPublisher: { _ in
                 let publisher = urlSession
-                    .dataTaskPublisher(for: urlRequest)
-                    .multicast {
-                        PassthroughSubject<(data: Data, response: URLResponse), URLError>()
-                    }
-                    .autoconnect()
+                    .future(urlRequest)
                 count += 1
                 let id = count
                 delegates.compactMap({ $0() }).forEach { delegate in

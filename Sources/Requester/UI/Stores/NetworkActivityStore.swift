@@ -32,7 +32,7 @@ public final class NetworkActivityStore: ObservableObject {
 
 extension NetworkActivityStore: APIRequestDispatchingDelegate {
     
-    public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: MultiCastDataTaskPublisher, for urlRequest: URLRequest, id: APIRequestDispatchID) {
+    public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, id: APIRequestDispatchID) {
         DispatchQueue.main.async {
             self.activity[id] = NetworkActivityItem(urlRequest, id: id)
             

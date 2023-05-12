@@ -85,15 +85,13 @@ public extension PiggyBacker {
         fileprivate init(id: ID?, publisher: P) async {
             self.id = id
             subject = PassthroughSubject()
-            var didReceiveValue: Bool = false
             publisher
+                .share()
                 .sink(
                     receiveCompletion: {completion in
-                        if !didReceiveValue { fatalError("never received a goddamn value") }
                         Task { await self.handleCompletion(completion) }
                     },
                     receiveValue: { result in
-                        didReceiveValue = true
                         Task { await self.handleReceiveValue(result) }
                     }
                 )
@@ -147,7 +145,7 @@ private extension PiggyBacker.InFlight {
         }
         
         if let storedValue { return storedValue }
-        throw APIError(type: .general, message: "Stream finished without value, storedValue: \(storedValue)")
+        throw APIError(type: .general, message: "Stream finished without value")
     }
     
     func handleCompletion(_ completion: Subscribers.Completion<P.Failure>) async {

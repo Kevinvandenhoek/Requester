@@ -6,8 +6,24 @@
 //
 
 import Foundation
+import Combine
 
-extension URLSession {
+public extension URLSession {
+    
+    typealias DataTaskFuture = Future<(data: Data, response: URLResponse), Error>
+    
+    func future(_ request: URLRequest) -> DataTaskFuture {
+        return DataTaskFuture { promise in
+            Task {
+                do {
+                    let data = try await self.data(request)
+                    promise(.success(data))
+                } catch {
+                    promise(.failure(error))
+                }
+            }
+        }
+    }
     
     func data(_ request: URLRequest) async throws -> (Data, URLResponse) {
         if #available(iOS 15.0, *) {

@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 public struct NetworkActivityItem {
     
@@ -31,8 +32,8 @@ public struct NetworkActivityItem {
     
     public enum State {
         case inProgress
-        case failed(URLSession.DataTaskPublisher.Failure)
-        case succeeded(URLSession.DataTaskPublisher.Output)
+        case failed(URLSession.DataTaskFuture.Failure)
+        case succeeded(URLSession.DataTaskFuture.Output)
         
         var id: Int {
             switch self {
