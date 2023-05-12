@@ -31,7 +31,7 @@ final class APIRequesterTest: XCTestCase {
         do {
             try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
         } catch {
-            XCTAssertEqual(APIErrorType.invalidToken("420"), (error as? APIError)?.type)
+            XCTAssertEqual(APIErrorType.invalidToken("420"), (error as? APIError)?.type, "returned error had message : \((error as? APIError)?.message)")
         }
         
         // Then

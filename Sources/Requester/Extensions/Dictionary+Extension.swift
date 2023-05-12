@@ -21,6 +21,25 @@ public extension Dictionary {
             .data(using: .utf8)
         return value
     }
+    
+    func asyncFilter(_ predicate: @escaping (Key, Value) async -> Bool) async -> [Key: Value] {
+        var filteredDictionary: [Key: Value] = [:]
+        await withTaskGroup(of: (key: Key, value: Value)?.self) { group in
+            for (key, value) in self {
+                group.addTask {
+                    let shouldInclude = await predicate(key, value)
+                    return shouldInclude ? (key: key, value: value) : nil
+                }
+            }
+
+            for await result in group {
+                if let result = result {
+                    filteredDictionary[result.key] = result.value
+                }
+            }
+        }
+        return filteredDictionary
+    }
 }
 
 private extension CharacterSet {
