@@ -130,7 +130,10 @@ private extension PiggyBacker.InFlight {
                     continuation.yield(.success(value))
                 }
             )
-            continuation.onTermination = { _ in
+            continuation.onTermination = { termination in
+                if termination == .cancelled {
+                    continuation.yield(.failure(APIError(type: .general, message: "request was cancelled")))
+                }
                 cancellable.cancel()
             }
         }
