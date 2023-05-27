@@ -82,6 +82,8 @@ public extension PiggyBacker {
         private let subject: PassthroughSubject<P.Output, Error>
         private var storedValue: P.Output?
         
+        private var valueTask: Task<Any, Never>?
+        
         fileprivate init(id: ID?, publisher: P) async {
             self.id = id
             subject = PassthroughSubject()
@@ -92,7 +94,9 @@ public extension PiggyBacker {
                         Task { await self.handleCompletion(completion) }
                     },
                     receiveValue: { result in
-                        Task { await self.handleReceiveValue(result) }
+                        self.valueTask = Task {
+                            await self.handleReceiveValue(result)
+                        }
                     }
                 )
                 .store(in: &cancellables)
@@ -147,6 +151,7 @@ private extension PiggyBacker.InFlight {
             }
         }
         
+        _ = await valueTask?.value
         if let storedValue { return storedValue }
         throw APIError(type: .general, message: "Stream finished without value")
     }
