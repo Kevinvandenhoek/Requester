@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension Data {
+public extension Data {
     
     var json: Any? {
         return try? JSONSerialization.jsonObject(with: self, options: [])
