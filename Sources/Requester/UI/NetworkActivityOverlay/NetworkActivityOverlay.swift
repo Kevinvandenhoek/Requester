@@ -31,7 +31,7 @@ public struct NetworkActivityOverlay: View {
                             .padding(.vertical, 10)
                             .background(SingleRoundedCapsule()
                                 .foregroundColor(Color(.secondarySystemBackground))
-                                .opacity(0.9)
+                                .shadow(color: Color.black.opacity(0.1), radius: 5, y: 3)
                             )
                             .transition(.move(edge: .bottom))
                             .animation(.easeInOut(duration: 0.2))
@@ -40,6 +40,7 @@ public struct NetworkActivityOverlay: View {
                 }
             }
         }
+        .padding(.bottom, 10)
         .sheet(isPresented: $showActivityView) {
             NetworkActivityView()
                 .environmentObject(store)
