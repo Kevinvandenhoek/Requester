@@ -18,15 +18,22 @@ public final class NetworkActivityStore: ObservableObject {
     @Published
     var didSetup: Bool = false
     
+    @Published
+    var showInlineActivity: Bool = UserDefaults.standard.bool(forKey: "Package.Requester.showActivityView")
+    
     private var cancellables: [AnyCancellable] = []
     
     public init(activity: [APIRequestDispatchID: NetworkActivityItem] = [:]) {
         self.activity = activity
+        $showInlineActivity
+            .dropFirst()
+            .sink { UserDefaults.standard.set($0, forKey: "Package.Requester.showActivityView") }
+            .store(in: &cancellables)
     }
     
     public func setup(with dispatcher: APIRequestDispatching) async {
         await dispatcher.add(delegate: self)
-        didSetup = true
+        DispatchQueue.main.async { self.didSetup = true }
     }
 }
 

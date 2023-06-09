@@ -8,11 +8,11 @@
 import Foundation
 import SwiftUI
 
-public struct NetworkActivityView: View {
+struct NetworkActivityView: View {
     
-    @StateObject var store: NetworkActivityStore
+    @EnvironmentObject var store: NetworkActivityStore
     
-    public var body: some View {
+    var body: some View {
         NavigationView {
             if store.didSetup || !store.activity.isEmpty {
                 ScrollView {
@@ -25,6 +25,12 @@ public struct NetworkActivityView: View {
                 }
                 .background(Color(.systemBackground))
                 .navigationTitle("Network Activity")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Toggle("show inline activity", isOn: $store.showInlineActivity)
+                            .toggleStyle(SwitchToggleStyle())
+                    }
+                }
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("NetworkActivityStore not set up")
@@ -196,49 +202,50 @@ struct NetworkActivityView_Previews: PreviewProvider {
     static let id4 = 4
     
     static var previews: some View {
-        NetworkActivityView(store: NetworkActivityStore(activity: [
-            id1: NetworkActivityItem(
-                URLRequest(url: url),
-                id: id1
-            ),
-            id2: NetworkActivityItem(
-                URLRequest(url: url),
-                id: id2,
-                state: .succeeded((
-                    data: Data(),
-                    response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
-                )),
-                associatedResults: [
-                    APIRequestingResult(
-                        request: APIRequestMock(),
-                        failedStep: .dispatching,
-                        error: APIError(type: .general)
-                    ),
-                    APIRequestingResult(
-                        request: APIRequestMock(),
-                        failedStep: nil,
-                        error: nil
-                    )
-                ],
-                associatedFollowUps: [id3],
-                completion: Date().addingTimeInterval(-454.1345398)
-            ),
-            id3: NetworkActivityItem(
-                URLRequest(url: url),
-                id: id3,
-                state: .succeeded((
-                    data: Data(),
-                    response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
-                )),
-                completion: Date().addingTimeInterval(-134.1345398)
-            ),
-            id4: NetworkActivityItem(
-                URLRequest(url: url),
-                id: id4,
-                state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
-                completion: Date().addingTimeInterval(-30.1345398)
-            )
-        ]))
+        NetworkActivityView()
+            .environmentObject(NetworkActivityStore(activity: [
+                id1: NetworkActivityItem(
+                    URLRequest(url: url),
+                    id: id1
+                ),
+                id2: NetworkActivityItem(
+                    URLRequest(url: url),
+                    id: id2,
+                    state: .succeeded((
+                        data: Data(),
+                        response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
+                    )),
+                    associatedResults: [
+                        APIRequestingResult(
+                            request: APIRequestMock(),
+                            failedStep: .dispatching,
+                            error: APIError(type: .general)
+                        ),
+                        APIRequestingResult(
+                            request: APIRequestMock(),
+                            failedStep: nil,
+                            error: nil
+                        )
+                    ],
+                    associatedFollowUps: [id3],
+                    completion: Date().addingTimeInterval(-454.1345398)
+                ),
+                id3: NetworkActivityItem(
+                    URLRequest(url: url),
+                    id: id3,
+                    state: .succeeded((
+                        data: Data(),
+                        response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
+                    )),
+                    completion: Date().addingTimeInterval(-134.1345398)
+                ),
+                id4: NetworkActivityItem(
+                    URLRequest(url: url),
+                    id: id4,
+                    state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
+                    completion: Date().addingTimeInterval(-30.1345398)
+                )
+            ]))
     }
 }
 #endif
