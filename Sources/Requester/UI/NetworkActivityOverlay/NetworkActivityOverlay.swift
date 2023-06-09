@@ -71,7 +71,7 @@ private extension NetworkActivityOverlay {
                     .onAppear {
                         Task {
                             guard !hiddenIds.contains(activity.id) else { return }
-                            try? await Task.sleep(nanoseconds: 3_000_000_000)
+                            try? await Task.sleep(nanoseconds: 5_000_000_000)
                             self.hiddenIds.insert(activity.id)
                         }
                     }
