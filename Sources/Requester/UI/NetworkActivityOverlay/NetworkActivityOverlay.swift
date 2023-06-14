@@ -19,6 +19,9 @@ public struct NetworkActivityOverlay: View {
     @State
     var hiddenIds: Set<APIRequestDispatchID> = []
     
+    @Namespace var namespace
+    private let disappearDelay: TimeInterval = 4
+    
     public var body: some View {
         VStack {
             Spacer()
@@ -35,7 +38,7 @@ public struct NetworkActivityOverlay: View {
                             )
                             .transition(.move(edge: .bottom))
                             .animation(.easeInOut(duration: 0.2))
-                            .id(id)
+                            .matchedGeometryEffect(id: id, in: namespace)
                     }
                 }
             }
@@ -71,7 +74,7 @@ private extension NetworkActivityOverlay {
                     .onAppear {
                         Task {
                             guard !hiddenIds.contains(activity.id) else { return }
-                            try? await Task.sleep(nanoseconds: 5_000_000_000)
+                            try? await Task.sleep(nanoseconds: UInt64(disappearDelay * 1_000_000_000))
                             self.hiddenIds.insert(activity.id)
                         }
                     }
@@ -83,8 +86,14 @@ private extension NetworkActivityOverlay {
     
     var items: [(key: APIRequestDispatchID, value: NetworkActivityItem)] {
         return store.activity
-            .filter({ id, _ in
-                return !hiddenIds.contains(id)
+            .filter({ id, value in
+                if hiddenIds.contains(id) {
+                    return false
+                } else if let completed = value.completion {
+                    return Date().timeIntervalSince(completed) < disappearDelay
+                } else {
+                    return true
+                }
             })
             .sorted(by: { $0.value.date < $1.value.date })
     }
