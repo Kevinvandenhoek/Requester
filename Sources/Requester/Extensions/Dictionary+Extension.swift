@@ -7,6 +7,18 @@
 
 import Foundation
 
+actor SafeDictionary<Key: Hashable, Value> {
+    private var dictionary: [Key: Value] = [:]
+
+    func update(_ value: Value, for key: Key) {
+        dictionary[key] = value
+    }
+
+    var value: [Key: Value] {
+        return dictionary
+    }
+}
+
 public extension Dictionary {
     
     var percentEncoded: Data? {
@@ -23,7 +35,7 @@ public extension Dictionary {
     }
     
     func asyncFilter(_ predicate: @escaping (Key, Value) async -> Bool) async -> [Key: Value] {
-        var filteredDictionary: [Key: Value] = [:]
+        let filteredDictionary = SafeDictionary<Key, Value>()
         await withTaskGroup(of: (key: Key, value: Value)?.self) { group in
             for (key, value) in self {
                 group.addTask {
@@ -34,11 +46,11 @@ public extension Dictionary {
 
             for await result in group {
                 if let result = result {
-                    filteredDictionary[result.key] = result.value
+                    await filteredDictionary.update(result.value, for: result.key)
                 }
             }
         }
-        return filteredDictionary
+        return await filteredDictionary.value
     }
 }
 
