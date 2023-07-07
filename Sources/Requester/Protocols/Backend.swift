@@ -15,6 +15,14 @@ public protocol Backend {
     var sslCertificates: [Base64String] { get }
 }
 
+public extension Backend {
+    
+    var authenticator: Authenticating? { nil }
+    var requestProcessors: [URLRequestProcessing] { [] }
+    var responseProcessors: [URLResponseProcessing] { [] }
+    var sslCertificates: [Base64String] { [] }
+}
+
 public extension Backend where Self == DefaultBackend {
 
     static func `default`(
