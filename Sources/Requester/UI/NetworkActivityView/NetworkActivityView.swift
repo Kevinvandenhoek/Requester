@@ -141,7 +141,7 @@ private extension NetworkActivityView {
                         .frame(width: 3)
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(alignment: .top) {
-                            Text(activity.pathText)
+                            Text(activity.name ?? activity.pathText)
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(Color.text)
                                 .multilineTextAlignment(.leading)
@@ -206,11 +206,13 @@ struct NetworkActivityView_Previews: PreviewProvider {
             .environmentObject(NetworkActivityStore(activity: [
                 id1: NetworkActivityItem(
                     URLRequest(url: url),
-                    id: id1
+                    id: id1,
+                    name: nil
                 ),
                 id2: NetworkActivityItem(
                     URLRequest(url: url),
                     id: id2,
+                    name: nil,
                     state: .succeeded((
                         data: Data(),
                         response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
@@ -233,6 +235,7 @@ struct NetworkActivityView_Previews: PreviewProvider {
                 id3: NetworkActivityItem(
                     URLRequest(url: url),
                     id: id3,
+                    name: nil,
                     state: .succeeded((
                         data: Data(),
                         response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
@@ -242,6 +245,7 @@ struct NetworkActivityView_Previews: PreviewProvider {
                 id4: NetworkActivityItem(
                     URLRequest(url: url),
                     id: id4,
+                    name: nil,
                     state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
                     completion: Date().addingTimeInterval(-30.1345398)
                 )

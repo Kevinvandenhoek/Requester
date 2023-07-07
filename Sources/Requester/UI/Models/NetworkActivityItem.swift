@@ -12,6 +12,7 @@ import Combine
 public struct NetworkActivityItem {
     
     public let id: APIRequestDispatchID
+    public let name: String?
     public let date: Date
     public let request: URLRequest
     public var associatedResults: Set<APIRequestingResult>
@@ -20,8 +21,9 @@ public struct NetworkActivityItem {
     private(set) var completion: Date?
     private(set) var state: State
     
-    init(_ request: URLRequest, id: APIRequestDispatchID, state: State = .inProgress, associatedResults: Set<APIRequestingResult> = [], associatedFollowUps: Set<APIRequestDispatchID> = [], completion: Date? = nil) {
+    init(_ request: URLRequest, id: APIRequestDispatchID, name: String?, state: State = .inProgress, associatedResults: Set<APIRequestingResult> = [], associatedFollowUps: Set<APIRequestDispatchID> = [], completion: Date? = nil) {
         self.id = id
+        self.name = name
         self.date = Date()
         self.state = state
         self.request = request

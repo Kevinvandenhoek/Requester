@@ -9,10 +9,10 @@ import Foundation
 
 public protocol APIRequestDispatchingDelegate: AnyObject {
     
-    func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, id: APIRequestDispatchID)
+    func requestDispatcher<Request: APIRequest>(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, apiRequest: Request, id: APIRequestDispatchID)
 }
 
 public extension APIRequestDispatchingDelegate {
     
-    func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, id: APIRequestDispatchID) { }
+    func requestDispatcher<Request: APIRequest>(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, apiRequest: Request, id: APIRequestDispatchID) { }
 }

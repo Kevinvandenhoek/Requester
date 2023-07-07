@@ -39,9 +39,9 @@ public final class NetworkActivityStore: ObservableObject {
 
 extension NetworkActivityStore: APIRequestDispatchingDelegate {
     
-    public func requestDispatcher(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, id: APIRequestDispatchID) {
+    public func requestDispatcher<Request: APIRequest>(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, apiRequest: Request, id: APIRequestDispatchID) {
         DispatchQueue.main.async {
-            self.activity[id] = NetworkActivityItem(urlRequest, id: id)
+            self.activity[id] = NetworkActivityItem(urlRequest, id: id, name: apiRequest.name)
             
             let updateActivity: (NetworkActivityItem.State) -> Void = { [weak self] state in
                 DispatchQueue.main.async {

@@ -17,7 +17,7 @@ struct NetworkActivityDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 60) {
-                section("Request #\(item.id)") {
+                section(item.name ?? "Request #\(item.id)") {
                     VStack(alignment: .leading, spacing: 20) {
                         keyValue("URL", item.request.url?.absoluteString)
                         keyValue("Host", item.request.url?.host)
@@ -230,6 +230,7 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
                 item: NetworkActivityItem(
                     request,
                     id: id,
+                    name: nil,
                     state: .succeeded((
                         data: String.largeJSON.toJSON!,
                         response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)!

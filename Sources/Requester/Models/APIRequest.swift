@@ -11,6 +11,8 @@ public protocol APIRequest: Equatable {
     
     associatedtype Response: Decodable
     
+    /// Used by the network activity monitor if not nil (instead of the path)
+    var name: String? { get }
     var parameterEncoding: ParameterEncoding { get }
     var headers: [String: String] { get }
     var method: APIMethod { get }
@@ -25,6 +27,7 @@ public protocol APIRequest: Equatable {
 // MARK: Defaults
 public extension APIRequest {
     
+    var name: String? { nil }
     var headers: [String: String] { [:] }
     var parameters: [String: Any] { [:] }
     var cachingGroups: [CachingGroup] { [] }
