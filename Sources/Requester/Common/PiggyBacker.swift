@@ -16,8 +16,6 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
     
     @discardableResult
     public func dispatch(_ key: HashKey, id: inout ID?, createPublisher: (HashKey) -> (id: ID, publisher: P)) async throws -> P.Output {
-        defer { Task { await cleanCompletedInFlights() } }
-        
         if let existing = inFlights[key], await !existing.didComplete {
             id = existing.id
             return try await existing.attach()
@@ -32,8 +30,6 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
     
     @discardableResult
     public func dispatch(_ key: HashKey, createPublisher: (HashKey) -> P) async throws -> P.Output {
-        defer { Task { await cleanCompletedInFlights() } }
-        
         if let existing = inFlights[key], await !existing.didComplete {
             return try await existing.attach()
         } else {
@@ -56,15 +52,6 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
             await inFlight.value.throw(error: error)
         }
         inFlights = [:]
-    }
-}
-
-private extension PiggyBacker {
-    
-    func cleanCompletedInFlights() async {
-        inFlights = await inFlights.asyncFilter({ _, value in
-            return await !value.didComplete
-        })
     }
 }
 
