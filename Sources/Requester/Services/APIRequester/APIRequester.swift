@@ -103,18 +103,17 @@ public actor APIRequester: APIRequesting {
     }
     
     @discardableResult
-    public func performWithMemoryCaching<Request: APIRequest>(_ request: Request) async throws -> Request.Response {
-        return try await performWithMemoryCaching(request, maxCacheLifetime: nil, mapper: { $0 })
+    public func perform<Request: APIRequest>(_ request: Request, cacheLifetime: CacheLifetime) async throws -> Request.Response {
+        return try await perform(
+            request,
+            cacheLifetime: cacheLifetime,
+            mapper: { $0 }
+        )
     }
     
     @discardableResult
-    public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
-        return try await performWithMemoryCaching(request, maxCacheLifetime: nil, mapper: mapper)
-    }
-    
-    @discardableResult
-    public func performWithMemoryCaching<Request: APIRequest, Mapped>(_ request: Request, maxCacheLifetime: CacheLifetime?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
-        if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: maxCacheLifetime) {
+    public func perform<Request: APIRequest, Mapped>(_ request: Request, cacheLifetime: CacheLifetime, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
+        if let cached: Mapped = await memoryCacher.get(request: request, maxLifetime: cacheLifetime) {
             return cached
         } else {
             let mapped = try await perform(request, mapper: mapper)

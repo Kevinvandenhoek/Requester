@@ -194,9 +194,13 @@ final class APIRequesterTest: XCTestCase {
         }))
         
         // When
-        let result = try await sut.performWithMemoryCaching(APIRequestMock(backend: .stubbed(authenticator: authenticator)), mapper: { response in
-            return response
-        })
+        let result = try await sut.perform(
+            APIRequestMock(backend: .stubbed(authenticator: authenticator)),
+            cacheLifetime: .greatestFiniteMagnitude,
+            mapper: { response in
+                return response
+            }
+        )
         
         // Then
         XCTAssertEqual(memoryCachedItem, result)

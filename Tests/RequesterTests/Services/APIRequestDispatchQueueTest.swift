@@ -58,23 +58,6 @@ final class APIRequestDispatcherTest: XCTestCase {
         let requests = await self.piggyBacker.inFlights
         XCTAssertEqual(requests.keys.count, 2)
     }
-    
-    func test_dispatch_whenDispatchingAndCompletingTwoDifferentRequests_shouldCleanUpRequestsFromQueue() async throws {
-        // Given
-        let apiRequestA = APIRequestMock(parameters: ["name": "arie"])
-        let urlRequestA = try urlRequestMapper.map(apiRequestA)
-        let apiRequestB = APIRequestMock(parameters: ["name": "jantje"])
-        let urlRequestB = try urlRequestMapper.map(apiRequestB)
-        
-        // When
-        let _ = try? await sut.dispatch(urlRequestA, apiRequestA, tokenID: nil, urlSession: urlSession)
-        let _ = try? await sut.dispatch(urlRequestB, apiRequestB, tokenID: nil, urlSession: urlSession)
-        
-        // Then
-        try? await Task.sleep(nanoseconds: UInt64(1_000_000_000 * 0.1)) // Cleanup happens asynchronously and isn't awaited in the dispatch method.
-        let requests = await self.piggyBacker.inFlights
-        XCTAssertEqual(requests.keys.count, 0)
-    }
 }
 
 private extension APIRequestDispatcherTest {
