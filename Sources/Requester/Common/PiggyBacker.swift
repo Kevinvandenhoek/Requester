@@ -11,6 +11,7 @@ import Combine
 public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
     
     private(set) var inFlights: [HashKey: InFlight] = [:]
+    private var cancellables: [AnyCancellable] = []
     
     public init() { }
     
@@ -22,7 +23,7 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
         } else {
             let (newID, publisher) = createPublisher(key)
             id = newID
-            let inflight = await InFlight(id: newID, publisher: publisher)
+            let inflight = InFlight(id: newID, publisher: publisher, cancellables: &cancellables)
             inFlights[key] = inflight
             return try await inflight.attach()
         }
@@ -33,7 +34,7 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> {
         if let existing = inFlights[key], await !existing.didComplete {
             return try await existing.attach()
         } else {
-            let inflight = await InFlight(id: nil, publisher: createPublisher(key))
+            let inflight = InFlight(id: nil, publisher: createPublisher(key), cancellables: &cancellables)
             inFlights[key] = inflight
             return try await inflight.attach()
         }
@@ -65,15 +66,12 @@ public extension PiggyBacker {
         private var publisherFinished = false
         private var riders = 0
         
-        private var cancellables: [AnyCancellable] = []
-        private let subject: PassthroughSubject<P.Output, Error>
-        private var storedValue: P.Output?
+        private let subject: CurrentValueSubject<P.Output?, Error>
         
-        private var valueTask: Task<Any, Never>?
-        
-        fileprivate init(id: ID?, publisher: P) async {
+        fileprivate init(id: ID?, publisher: P, cancellables: inout [AnyCancellable]) {
             self.id = id
-            subject = PassthroughSubject()
+            let subject: CurrentValueSubject<P.Output?, Error> = CurrentValueSubject(nil)
+            self.subject = subject
             publisher
                 .share()
                 .sink(
@@ -81,9 +79,7 @@ public extension PiggyBacker {
                         Task { await self.handleCompletion(completion) }
                     },
                     receiveValue: { result in
-                        self.valueTask = Task {
-                            await self.handleReceiveValue(result)
-                        }
+                        subject.send(result)
                     }
                 )
                 .store(in: &cancellables)
@@ -96,7 +92,6 @@ public extension PiggyBacker {
         func `throw`(error: APIError) {
             subject.send(completion: .failure(error))
             publisherFinished = true
-            cancellables = []
         }
     }
 }
@@ -118,6 +113,7 @@ private extension PiggyBacker.InFlight {
                     }
                 },
                 receiveValue: { value in
+                    guard let value else { return }
                     continuation.yield(.success(value))
                 }
             )
@@ -138,8 +134,7 @@ private extension PiggyBacker.InFlight {
             }
         }
         
-        _ = await valueTask?.value
-        if let storedValue { return storedValue }
+        if let storedValue = subject.value { return storedValue }
         throw APIError(type: .general, message: "Stream finished without value")
     }
     
@@ -152,10 +147,5 @@ private extension PiggyBacker.InFlight {
             subject.send(completion: .failure(error))
         }
         publisherFinished = true
-    }
-    
-    func handleReceiveValue(_ value: P.Output) async {
-        storedValue = value
-        subject.send(value)
     }
 }
