@@ -61,91 +61,59 @@ public extension PiggyBacker {
     actor InFlight {
         
         let id: ID?
-        var didComplete: Bool { riders <= 0 && publisherFinished }
+        var didComplete: Bool { subject.value != nil }
         
         private var publisherFinished = false
-        private var riders = 0
-        
-        private let subject: CurrentValueSubject<P.Output?, Error>
+        private let subject: CurrentValueSubject<Result<P.Output, Error>?, Never>
+        private var cancellables: [AnyCancellable] = []
         
         fileprivate init(id: ID?, publisher: P, cancellables: inout [AnyCancellable]) {
             self.id = id
-            let subject: CurrentValueSubject<P.Output?, Error> = CurrentValueSubject(nil)
+            let subject: CurrentValueSubject<Result<P.Output, Error>?, Never> = CurrentValueSubject(nil)
             self.subject = subject
             publisher
                 .share()
                 .sink(
-                    receiveCompletion: {completion in
-                        Task { await self.handleCompletion(completion) }
+                    receiveCompletion: { completion in
+                        guard subject.value == nil else { return }
+                        switch completion {
+                        case .finished:
+                            break
+                        case .failure(let error):
+                            subject.send(.failure(error))
+                        }
                     },
                     receiveValue: { result in
-                        subject.send(result)
+                        guard subject.value == nil else { return }
+                        subject.send(.success(result))
                     }
                 )
                 .store(in: &cancellables)
         }
         
         func attach() async throws -> P.Output {
-            return try await self.subscribeToSubject()
+            if let result = subject.value {
+                switch result {
+                case .success(let value):
+                    return value
+                case .failure(let error):
+                    throw error
+                }
+            } else {
+                return try await withCheckedThrowingContinuation { continuation in
+                    return subject
+                        .sink { value in
+                            guard let value else { return }
+                            continuation.resume(with: value)
+                        }
+                        .store(in: &cancellables)
+                }
+            }
         }
         
         func `throw`(error: APIError) {
-            subject.send(completion: .failure(error))
-            publisherFinished = true
+            guard subject.value == nil else { return }
+            subject.send(.failure(error))
         }
-    }
-}
-
-private extension PiggyBacker.InFlight {
-    
-    func subscribeToSubject() async throws -> P.Output {
-        typealias ResultType = Result<P.Output, Error>
-        
-        let stream = AsyncStream<ResultType>(ResultType.self) { continuation in
-            let cancellable = self.subject.sink(
-                receiveCompletion: { completion in
-                    switch completion {
-                    case .finished:
-                        continuation.finish()
-                    case .failure(let error):
-                        continuation.yield(.failure(error))
-                        continuation.finish()
-                    }
-                },
-                receiveValue: { value in
-                    guard let value else { return }
-                    continuation.yield(.success(value))
-                }
-            )
-            continuation.onTermination = { termination in
-                if termination == .cancelled {
-                    continuation.yield(.failure(APIError(type: .general, message: "request was cancelled")))
-                }
-                cancellable.cancel()
-            }
-        }
-        
-        for await result in stream {
-            switch result {
-            case .success(let value):
-                return value
-            case .failure(let error):
-                throw error
-            }
-        }
-        
-        if let storedValue = subject.value { return storedValue }
-        throw APIError(type: .general, message: "Stream finished without value")
-    }
-    
-    func handleCompletion(_ completion: Subscribers.Completion<P.Failure>) async {
-        guard !didComplete else { return }
-        switch completion {
-        case .finished:
-            subject.send(completion: .finished)
-        case .failure(let error):
-            subject.send(completion: .failure(error))
-        }
-        publisherFinished = true
     }
 }
