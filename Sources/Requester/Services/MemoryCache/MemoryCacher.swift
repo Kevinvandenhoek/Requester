@@ -30,7 +30,6 @@ public actor MemoryCacher: MemoryCaching {
         guard let stored = storage[key],
               date.timeIntervalSince(stored.date) < (maxLifetime ?? .greatestFiniteMagnitude),
               let model = stored.model as? Model else {
-            storage[key] = nil
             return nil
         }
         return model
