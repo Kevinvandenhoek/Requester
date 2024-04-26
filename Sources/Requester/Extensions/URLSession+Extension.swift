@@ -12,6 +12,9 @@ public extension URLSession {
     
     typealias DataTaskFuture = Future<(data: Data, response: URLResponse), Error>
     
+    /// Some SDK's swizzle the 'old fashioned' completion handler functions on URLSession. If your SDK still does this (and doesn't swizzle the new async await functions yet) you'll want to set this to true to not miss out on this swizzling hot action
+    static var requesterUseURLSessionCompletionHandlers: Bool = false
+    
     func future(_ request: URLRequest) -> DataTaskFuture {
         return DataTaskFuture { promise in
             Task {
@@ -26,7 +29,7 @@ public extension URLSession {
     }
     
     func data(_ request: URLRequest) async throws -> (Data, URLResponse) {
-        if #available(iOS 15.0, *) {
+        if #available(iOS 15.0, *), !Self.requesterUseURLSessionCompletionHandlers {
             return try await data(for: request)
         } else {
             return try await withUnsafeThrowingContinuation { continuation in
