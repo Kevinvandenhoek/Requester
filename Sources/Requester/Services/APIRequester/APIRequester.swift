@@ -211,9 +211,9 @@ private extension APIRequester {
                         response: response
                     )
                 }
-            case .custom(let isValid):
+            case .custom(let validator):
                 guard let httpResponse = response as? HTTPURLResponse else { break }
-                if !isValid(httpResponse.statusCode) {
+                if !validator.isValid(httpResponse.statusCode) {
                     throw APIError(
                         type: .invalidStatusCode,
                         statusCode: httpResponse.statusCode,
