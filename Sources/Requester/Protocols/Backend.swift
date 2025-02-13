@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol Backend {
+public protocol Backend: Sendable {
     var baseURL: URL { get }
     var authenticator: Authenticating? { get }
     var requestProcessors: [URLRequestProcessing] { get }

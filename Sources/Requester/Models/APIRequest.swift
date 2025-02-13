@@ -7,9 +7,9 @@
 
 import Foundation
 
-public protocol APIRequest: Equatable {
+public protocol APIRequest: Equatable, Sendable {
     
-    associatedtype Response: Decodable
+    associatedtype Response: Decodable, Sendable
     
     /// Used by the network activity monitor if not nil (instead of the path)
     var name: String? { get }

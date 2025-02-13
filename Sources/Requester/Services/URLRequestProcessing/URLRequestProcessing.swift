@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol URLRequestProcessing {
+public protocol URLRequestProcessing: Sendable {
     
     func process(_ urlRequest: inout URLRequest) throws
 }

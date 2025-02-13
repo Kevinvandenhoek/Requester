@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum APIMethod: String {
+public enum APIMethod: String, Sendable {
     case get = "GET"
     case post = "POST"
     case patch = "PATCH"

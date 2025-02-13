@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol CachingGroup {
+public protocol CachingGroup: Sendable {
     
     var id: String { get }
 }
