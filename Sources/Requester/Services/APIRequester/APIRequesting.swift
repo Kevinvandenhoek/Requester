@@ -7,7 +7,7 @@
 
 import Foundation
 
-@MainActor public protocol APIRequesting {
+public protocol APIRequesting {
     
     var memoryCacher: MemoryCaching { get }
     
