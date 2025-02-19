@@ -123,7 +123,7 @@ public actor APIRequester: APIRequesting {
     }
     
     public func setup(with store: NetworkActivityStore) async {
-        await NetworkActivityStore.default.setup(with: dispatcher)
+        await store.setup(with: dispatcher)
         stores.append { [weak store] in store }
     }
 }

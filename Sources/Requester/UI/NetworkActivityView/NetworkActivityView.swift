@@ -8,11 +8,13 @@
 import Foundation
 import SwiftUI
 
-struct NetworkActivityView: View {
+public struct NetworkActivityView: View {
     
     @EnvironmentObject var store: NetworkActivityStore
     
-    var body: some View {
+    public init() { }
+    
+    public var body: some View {
         NavigationView {
             if store.didSetup || !store.activity.isEmpty {
                 ScrollView {
