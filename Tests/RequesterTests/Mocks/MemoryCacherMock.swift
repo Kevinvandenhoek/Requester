@@ -8,7 +8,7 @@
 import Foundation
 @testable import Requester
 
-class MemoryCacherMock: MemoryCaching {
+@MainActor final class MemoryCacherMock: MemoryCaching {
     
     var invokedStore = false
     var invokedStoreCount = 0

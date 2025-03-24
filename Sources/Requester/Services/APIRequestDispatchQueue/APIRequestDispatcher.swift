@@ -35,13 +35,15 @@ public actor APIRequestDispatcher: APIRequestDispatching {
                 count += 1
                 let id = count
                 delegates.compactMap({ $0() }).forEach { delegate in
-                    delegate?.requestDispatcher(
-                        self,
-                        didCreate: publisher,
-                        for: urlRequest,
-                        apiRequest: apiRequest,
-                        id: id
-                    )
+                    Task { @MainActor in
+                        delegate?.requestDispatcher(
+                            self,
+                            didCreate: publisher,
+                            for: urlRequest,
+                            apiRequest: apiRequest,
+                            id: id
+                        )
+                    }
                 }
                 return (id: id, publisher: publisher)
             }

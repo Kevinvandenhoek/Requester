@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol APIRequestDispatchingDelegate: AnyObject {
+@MainActor public protocol APIRequestDispatchingDelegate: AnyObject {
     
     func requestDispatcher<Request: APIRequest>(_ requestDispatcher: APIRequestDispatching, didCreate publisher: URLSession.DataTaskFuture, for urlRequest: URLRequest, apiRequest: Request, id: APIRequestDispatchID)
 }

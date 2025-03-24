@@ -10,7 +10,7 @@ import XCTest
 
 @testable import Requester
 
-final class APIRequesterTest: XCTestCase {
+@MainActor final class APIRequesterTest: XCTestCase {
     
     func test_perform_shouldRefreshTokenOn401() async throws {
         // Given
@@ -31,7 +31,7 @@ final class APIRequesterTest: XCTestCase {
         do {
             try await sut.perform(APIRequestMock(backend: .stubbed(authenticator: authenticator)))
         } catch {
-            XCTAssertEqual(APIErrorType.invalidToken("420"), (error as? APIError)?.type, "returned error had message : \((error as? APIError)?.message)")
+            XCTAssertEqual(APIErrorType.invalidToken("420"), (error as? APIError)?.type, "returned error had message : \(String(describing: (error as? APIError)?.message))")
         }
         
         // Then

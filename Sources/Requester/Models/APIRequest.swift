@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol APIRequest: Equatable {
+public protocol APIRequest: Equatable, Sendable {
     
     associatedtype Response: Decodable
     
@@ -17,7 +17,7 @@ public protocol APIRequest: Equatable {
     var headers: [String: String] { get }
     var method: APIMethod { get }
     var path: String { get }
-    var parameters: [String: Any] { get }
+    nonisolated var parameters: [String: Any] { get }
     var backend: Backend { get }
     var decoder: DataDecoding? { get }
     var cachingGroups: [CachingGroup] { get }

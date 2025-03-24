@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum ParameterEncoding: Equatable {
+public enum ParameterEncoding: Equatable, Sendable {
     case json
     case url(destination: URLEncodingDestination? = nil)
     case urlAndJson(urlKeys: [String])
@@ -15,7 +15,7 @@ public enum ParameterEncoding: Equatable {
     case custom(ParameterEncoder)
 }
 
-public typealias ParameterEncoder = (_ parameters: [String: Any], _ request: inout URLRequest) -> Void
+public typealias ParameterEncoder = @Sendable (_ parameters: [String: Any], _ request: inout URLRequest) -> Void
 
 public extension ParameterEncoding {
     
@@ -61,7 +61,7 @@ public extension ParameterEncoding {
     }
 }
 
-public enum URLEncodingDestination {
+public enum URLEncodingDestination: Sendable {
     case body
     case queryString
     

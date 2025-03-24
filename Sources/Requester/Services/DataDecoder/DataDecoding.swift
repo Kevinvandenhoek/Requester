@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol DataDecoding {
+public protocol DataDecoding: Sendable {
     
-    func decode<Value: Decodable>(_ data: Data) throws -> Value
+    func decode<Value: Decodable>(_ data: Data) async throws -> Value
 }

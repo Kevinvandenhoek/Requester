@@ -9,7 +9,7 @@ import Foundation
 import XCTest
 @testable import Requester
 
-final class APIRequestDispatcherTest: XCTestCase {
+@MainActor final class APIRequestDispatcherTest: XCTestCase {
     
     var sut: APIRequestDispatcher!
     var piggyBacker = PiggyBacker<APIRequestDispatcher.HashKey, URLSession.DataTaskFuture, APIRequestDispatchID>()

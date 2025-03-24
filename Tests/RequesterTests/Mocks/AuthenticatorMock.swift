@@ -8,7 +8,7 @@
 import Foundation
 @testable import Requester
 
-final class AuthenticatorMock: Authenticating {
+@MainActor final class AuthenticatorMock: Authenticating {
 
     var invokedAuthenticate = false
     var invokedAuthenticateCount = 0

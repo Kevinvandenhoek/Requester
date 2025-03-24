@@ -10,7 +10,11 @@ import Foundation
 public extension NetworkActivityOverlay {
     
     /// Initializes a NetworkActivityView with NetworkActicityStore.default. Be sure to use the setup method on this store to set it up with your request dispatcher
-    init(_ store: NetworkActivityStore = .default) {
+    init() {
+        self.init(store: NetworkActivityStore.default)
+    }
+    
+    init(_ store: NetworkActivityStore) {
         self.init(store: store)
     }
 }

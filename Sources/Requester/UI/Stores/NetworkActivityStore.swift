@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-public final class NetworkActivityStore: ObservableObject {
+@MainActor public final class NetworkActivityStore: ObservableObject {
     
     public static let `default` = NetworkActivityStore()
     
@@ -33,7 +33,7 @@ public final class NetworkActivityStore: ObservableObject {
     
     public func setup(with dispatcher: APIRequestDispatching) async {
         await dispatcher.add(delegate: self)
-        DispatchQueue.main.async { self.didSetup = true }
+        self.didSetup = true
     }
 }
 
@@ -93,7 +93,7 @@ public struct APIRequestingResult: Hashable, Identifiable {
     }
 }
 
-public enum APIRequestingStep: Hashable {
+public enum APIRequestingStep: Hashable, Sendable {
     case dispatching
     case processing
     case authorizationValidation

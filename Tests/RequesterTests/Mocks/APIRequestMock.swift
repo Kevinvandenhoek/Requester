@@ -8,7 +8,7 @@
 import Foundation
 @testable import Requester
 
-public struct APIRequestMock: APIRequest {
+@MainActor public struct APIRequestMock: APIRequest {
        
     public typealias Response = APIRequestResponseMock
     

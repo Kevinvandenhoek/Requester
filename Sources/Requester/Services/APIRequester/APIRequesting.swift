@@ -19,7 +19,7 @@ public protocol APIRequesting {
     func setup(with store: NetworkActivityStore) async
 }
 
-protocol APIRequestingActivityDelegate: AnyObject {
+@MainActor protocol APIRequestingActivityDelegate: AnyObject {
     
     func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID)
     func requester(_ requester: APIRequesting, didGetResult result: APIRequestingResult, for id: APIRequestDispatchID, previous: APIRequestDispatchID?)

@@ -143,8 +143,8 @@ private extension APIRequester {
     func execute<Request: APIRequest, Mapped>(_ request: Request, tokenID: inout TokenID?, dispatchId: inout APIRequestDispatchID?, previous: APIRequestDispatchID?, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped {
         var urlRequest = try urlRequestMapper.map(request)
         
-        try request.backend.requestProcessors.forEach { processor in
-            try processor.process(&urlRequest)
+        for processor in request.backend.requestProcessors {
+            try await processor.process(&urlRequest)
         }
         
         if let authenticator = request.backend.authenticator {
@@ -162,14 +162,14 @@ private extension APIRequester {
             let (data, response) = try await dispatcher.dispatch(urlRequest, request, tokenID: tokenID, urlSession: urlSession, dispatchId: &dispatchId)
             
             step = .processing
-            try request.backend.responseProcessors.forEach { processor in
-                try processor.process(response, data: data, request: request)
+            for processor in request.backend.responseProcessors {
+                try await processor.process(response, data: data, request: request)
             }
             
             step = .authorizationValidation
             if let httpResponse = response as? HTTPURLResponse,
                let authenticator = request.backend.authenticator {
-                if authenticator.shouldRefreshToken(request: request, response: httpResponse, data: data) {
+                if await authenticator.shouldRefreshToken(request: request, response: httpResponse, data: data) {
                     if let tokenID = tokenID {
                         throw APIError(
                             type: .invalidToken(tokenID),
@@ -229,12 +229,14 @@ private extension APIRequester {
             step = .decoding
             let decoder = request.decoder ?? self.decoder
             do {
-                let decoded: Request.Response = try decoder.decode(data)
+                let decoded: Request.Response = try await decoder.decode(data)
                 step = .mapping
                 let result: Mapped = try mapper(decoded)
                 if let dispatchId {
                     stores.forEach { store in
-                        store()?.requester(self, didGetResult: APIRequestingResult(request: request, failedStep: nil, error: nil), for: dispatchId)
+                        Task { @MainActor in
+                            store()?.requester(self, didGetResult: APIRequestingResult(request: request, failedStep: nil, error: nil), for: dispatchId)
+                        }
                     }
                 }
                 return result
@@ -250,8 +252,11 @@ private extension APIRequester {
             }
         } catch { // Log to NetworkStore if applicable
             guard let dispatchId else { throw error }
+            let step = step
             stores.forEach { store in
-                store()?.requester(self, didGetResult: APIRequestingResult(request: request, failedStep: step, error: error), for: dispatchId)
+                Task { @MainActor in
+                    store()?.requester(self, didGetResult: APIRequestingResult(request: request, failedStep: step, error: error), for: dispatchId)
+                }
             }
             throw error
         }

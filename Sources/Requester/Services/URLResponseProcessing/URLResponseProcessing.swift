@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol URLResponseProcessing {
+public protocol URLResponseProcessing: Sendable {
     
-    func process<Request: APIRequest>(_ response: URLResponse, data: Data, request: Request) throws
+    func process<Request: APIRequest>(_ response: URLResponse, data: Data, request: Request) async throws
 }

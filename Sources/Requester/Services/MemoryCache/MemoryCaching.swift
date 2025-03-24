@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol MemoryCaching {
+public protocol MemoryCaching: Sendable {
     
     func store<Request: APIRequest, Model>(request: Request, model: Model) async
     func get<Request: APIRequest, Model>(request: Request) async -> Model?

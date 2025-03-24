@@ -10,7 +10,7 @@ import XCTest
 
 @testable import Requester
 
-final class MemoryCacheTest: XCTestCase {
+@MainActor final class MemoryCacheTest: XCTestCase {
     
     private var sut: MemoryCacher!
     

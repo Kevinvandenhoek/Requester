@@ -11,7 +11,7 @@ import Foundation
 public typealias TokenID = String
 
 /// An authenticator meant for URLRequest authentication.
-public protocol Authenticating {
+public protocol Authenticating: Sendable {
     
     /// Authenticate the URLRequest and return an arbitrary identifier to identify the token used for authentication. If a missingToken error is returned, a refreshToken call will be triggered. Providing an identifier for the token will ensure all existing requests using the same token will be cancelled if any token expiration is detected. These calls will then be silently retried when the token is refreshed.
     func authenticate(request: inout URLRequest) async -> Result<TokenID?, AuthenticationError>
@@ -19,12 +19,12 @@ public protocol Authenticating {
     func fetchToken() async throws
     
     /// The default implementation is a check if the status code is 401, in which case it will return true.
-    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) -> Bool
+    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) async -> Bool
 }
 
 public extension Authenticating {
     
-    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) -> Bool {
+    func shouldRefreshToken<Request: APIRequest>(request: Request, response: HTTPURLResponse, data: Data) async -> Bool {
         return response.statusCode == 401
     }
 }
