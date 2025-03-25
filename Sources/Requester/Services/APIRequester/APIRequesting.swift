@@ -7,14 +7,14 @@
 
 import Foundation
 
-public protocol APIRequesting {
+public protocol APIRequesting: Sendable {
     
     var memoryCacher: MemoryCaching { get }
     
     @discardableResult func perform<Request: APIRequest>(_ request: Request) async throws -> Request.Response
     @discardableResult func perform<Request: APIRequest>(_ request: Request, cacheLifetime: CacheLifetime) async throws -> Request.Response
-    @discardableResult func perform<Request: APIRequest, Mapped>(_ request: Request, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped
-    @discardableResult func perform<Request: APIRequest, Mapped>(_ request: Request, cacheLifetime: CacheLifetime, mapper: (Request.Response) throws -> Mapped) async throws -> Mapped
+    @discardableResult func perform<Request: APIRequest, Mapped: Sendable>(_ request: Request, mapper: @Sendable (Request.Response) throws -> Mapped) async throws -> Mapped
+    @discardableResult func perform<Request: APIRequest, Mapped: Sendable>(_ request: Request, cacheLifetime: CacheLifetime, mapper: @Sendable (Request.Response) throws -> Mapped) async throws -> Mapped
     
     func setup(with store: NetworkActivityStore) async
 }
