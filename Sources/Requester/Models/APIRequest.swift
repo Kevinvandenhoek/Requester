@@ -17,7 +17,7 @@ public protocol APIRequest: Equatable, Sendable {
     var headers: [String: String] { get }
     var method: APIMethod { get }
     var path: String { get }
-    nonisolated var parameters: [String: Any] { get }
+    var parameters: [String: any Sendable] { get }
     var backend: Backend { get }
     var decoder: DataDecoding? { get }
     var cachingGroups: [CachingGroup] { get }
@@ -29,7 +29,7 @@ public extension APIRequest {
     
     var name: String? { nil }
     var headers: [String: String] { [:] }
-    var parameters: [String: Any] { [:] }
+    var parameters: [String: any Sendable] { [:] }
     var cachingGroups: [CachingGroup] { [] }
     var decoder: DataDecoding? { nil }
     var parameterEncoding: ParameterEncoding {
