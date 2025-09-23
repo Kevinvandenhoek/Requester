@@ -61,7 +61,7 @@ import XCTest
         XCTAssertNotNil(result)
     }
     
-    func test_get_afterStore_shouldReturnStoredValueForDifferentRequest() async {
+    func test_get_afterStore_shouldNotReturnStoredValueForDifferentRequest() async {
         // Given
         let model = APIRequestResponseMock(id: "1")
         let request = APIRequestMock(parameters: ["name": "arie"])
