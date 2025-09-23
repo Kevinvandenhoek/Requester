@@ -9,6 +9,8 @@ import Foundation
 
 #if DEBUG
 // MARK: Stubs / Preview helpers
+extension String: @retroactive Error { }
+
 extension String {
     
     var toJSON: Data? {

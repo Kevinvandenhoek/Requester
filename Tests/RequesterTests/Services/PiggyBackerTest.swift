@@ -12,10 +12,9 @@ import Combine
 
 final class PiggyBackerTest: XCTestCase {
     
-    let sut = PiggyBacker<String, Future<String, Error>, APIRequestDispatchID>()
-    
     func test_whenDispatching_shouldReturnFutureCompletion() async throws {
         // Given
+        let sut = PiggyBacker<String, Future<String, Error>, APIRequestDispatchID>()
         let resultString = "completed"
         
         // When
@@ -31,6 +30,7 @@ final class PiggyBackerTest: XCTestCase {
     
     func test_whenDispatchingMultipleWithDifferentId_shouldReturnMatchingResults() async throws {
         // Given
+        let sut = PiggyBacker<String, Future<String, Error>, APIRequestDispatchID>()
         let resultAString = "resultAString"
         let resultBString = "resultBString"
         
@@ -50,6 +50,7 @@ final class PiggyBackerTest: XCTestCase {
     
     func test_whenDispatchingMultipleWithSameId_shouldReturnFirstMatchForId() async throws {
         // Given
+        let sut = PiggyBacker<String, Future<String, Error>, APIRequestDispatchID>()
         let resultAString = "resultAString"
         let resultBString = "resultBString"
         
@@ -69,42 +70,34 @@ final class PiggyBackerTest: XCTestCase {
     
     func test_whenDispatchingManyTasksWithSameId_shouldAllReturnFirstTaskResult() async throws {
         // Given
+        let sut = PiggyBacker<String, Future<String, Error>, APIRequestDispatchID>()
         let firstTaskResult = "firstTaskResult"
         let taskCount = 1_000_000
         
         // When
-        let tasks = (0..<taskCount).map { index in
-            Task {
-                try await sut.dispatch("piggyback") { id in
-                    if index == 0 {
-                        return Future.delayed(1, result: .success(firstTaskResult))
-                    } else {
-                        return Future.delayed(1, result: .success("task_\(index)_result"))
+        let results = try await withThrowingTaskGroup(of: String.self) { group in
+            for i in 0..<taskCount {
+                group.addTask {
+                    try await sut.dispatch("piggyback") { id in
+                        if i == 0 {
+                            return Future.delayed(5, result: .success("firstTaskResult"))
+                        } else {
+                            return Future.delayed(5, result: .success("task_\(i)_result"))
+                        }
                     }
                 }
             }
-        }
-        
-        // Then
-        let results = try await withThrowingTaskGroup(of: String.self) { group in
-            for task in tasks {
-                group.addTask {
-                    try await task.value
-                }
-            }
-            
-            var collectedResults: [String] = []
-            for try await result in group {
-                collectedResults.append(result)
-            }
-            return collectedResults
+            var out: [String] = []
+            out.reserveCapacity(taskCount)
+            for try await r in group { out.append(r) }
+            return out
         }
         
         // All results should be the same (from the first task that actually executed)
         XCTAssertEqual(results.count, taskCount)
-        let firstResult = results.first ?? "missing"
-        XCTAssertTrue(results.allSatisfy { $0 == firstResult })
-        XCTAssertEqual(firstResult, firstTaskResult)
+        results.forEach { result in
+            XCTAssertEqual(result, firstTaskResult)
+        }
     }
 }
 
