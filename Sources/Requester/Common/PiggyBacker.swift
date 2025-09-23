@@ -17,7 +17,7 @@ public actor PiggyBacker<HashKey: Hashable, P: Publisher, ID> where P.Output: Se
     public func dispatch(
         _ key: HashKey,
         id: inout ID?,
-        createPublisher: @Sendable (HashKey) async -> (id: ID, publisher: P)
+        createPublisher: @Sendable (HashKey) async throws -> (id: ID, publisher: P)
     ) async throws -> P.Output {
         let inflight = try await ensureInFlight(for: key, id: &id, createPublisher: createPublisher)
         return try await inflight.attach()
@@ -52,13 +52,13 @@ private extension PiggyBacker {
     func ensureInFlight(
         for key: HashKey,
         id: inout ID?,
-        createPublisher: @Sendable (HashKey) async -> (id: ID, publisher: P)
+        createPublisher: @Sendable (HashKey) async throws -> (id: ID, publisher: P)
     ) async throws -> InFlight {
         if let existing = inFlights[key], await !existing.didComplete {
             id = await existing.id as? ID
             return existing
         }
-        let (newID, publisher) = await createPublisher(key)
+        let (newID, publisher) = try await createPublisher(key)
         let inflight = InFlight(id: newID)
         inFlights[key] = inflight
         id = newID
@@ -68,10 +68,10 @@ private extension PiggyBacker {
 
     func ensureInFlight(
         for key: HashKey,
-        createPublisher: @Sendable (HashKey) async -> P
+        createPublisher: @Sendable (HashKey) async throws -> P
     ) async throws -> InFlight {
         if let existing = inFlights[key], await !existing.didComplete { return existing }
-        let publisher = await createPublisher(key)
+        let publisher = try await createPublisher(key)
         let inflight = InFlight(id: nil)
         inFlights[key] = inflight
         await inflight.start(with: publisher)
