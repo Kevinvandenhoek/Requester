@@ -42,7 +42,7 @@ import XCTest
         XCTAssertEqual(requests.keys.count, 1)
     }
     
-    func test_dispatch_whenDispatchingTwoDifferentRequests_shouldCombineIntoOne() async throws {
+    func test_dispatch_whenDispatchingTwoDifferentRequests_shouldNotCombineIntoOne() async throws {
         // Given
         let apiRequestA = APIRequestMock(parameters: ["name": "arie"])
         let urlRequestA = try urlRequestMapper.map(apiRequestA)

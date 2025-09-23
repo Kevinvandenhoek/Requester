@@ -13,7 +13,7 @@ public struct APIRequestMock: APIRequest {
        
     public typealias Response = APIRequestResponseMock
     
-    public let parameters: [String: Any]
+    public let parameters: APIRequestParameters
     public let backend: Backend
     public let cachingGroups: [CachingGroup]
     public let method: APIMethod
