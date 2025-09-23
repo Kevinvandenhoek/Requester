@@ -30,7 +30,7 @@ public actor APIRequestDispatcher: APIRequestDispatching {
             HashKey(urlRequest, apiRequest, tokenID: tokenID),
             id: &dispatchId,
             createPublisher: { [weak self] _ in
-                guard let self else { throw "self is nil" }
+                guard let self else { throw APIError(type: .general, message: "self is nil") }
                 
                 let (id, publisher, delegates) = await self.preparePublisher(
                     urlRequest: urlRequest,
