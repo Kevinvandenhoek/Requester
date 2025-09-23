@@ -58,12 +58,21 @@ private extension PiggyBacker {
             id = await existing.id as? ID
             return existing
         }
-        let (newID, publisher) = try await createPublisher(key)
-        let inflight = InFlight(id: newID)
-        inFlights[key] = inflight
-        id = newID
-        await inflight.start(with: publisher)
-        return inflight
+        
+        let placeholder = InFlight(id: nil)
+        inFlights[key] = placeholder
+        
+        do {
+            let (newID, publisher) = try await createPublisher(key)
+            id = newID
+            await placeholder.setID(newID)
+            await placeholder.start(with: publisher)
+            return placeholder
+        } catch {
+            inFlights[key] = nil
+            await placeholder.finish(throwing: error)
+            throw error
+        }
     }
 
     func ensureInFlight(
@@ -71,11 +80,19 @@ private extension PiggyBacker {
         createPublisher: @Sendable (HashKey) async throws -> P
     ) async throws -> InFlight {
         if let existing = inFlights[key], await !existing.didComplete { return existing }
-        let publisher = try await createPublisher(key)
-        let inflight = InFlight(id: nil)
-        inFlights[key] = inflight
-        await inflight.start(with: publisher)
-        return inflight
+
+        let placeholder = InFlight(id: nil)
+        inFlights[key] = placeholder
+
+        do {
+            let publisher = try await createPublisher(key)
+            await placeholder.start(with: publisher)
+            return placeholder
+        } catch {
+            inFlights[key] = nil
+            await placeholder.finish(throwing: error)
+            throw error
+        }
     }
 }
 
@@ -90,6 +107,11 @@ public extension PiggyBacker {
         private var waiters: [CheckedContinuation<P.Output, Error>] = []
         
         fileprivate init(id: Any?) { self.id = id }
+        
+        func setID(_ newID: Any) {
+            guard id == nil else { return }
+            id = newID
+        }
         
         func start(with publisher: P) {
             guard runner == nil, !didComplete else { return }

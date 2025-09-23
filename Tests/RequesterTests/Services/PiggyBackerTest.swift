@@ -7,8 +7,8 @@
 
 import Foundation
 import XCTest
-import Requester
 import Combine
+@testable import Requester
 
 final class PiggyBackerTest: XCTestCase {
     
@@ -63,6 +63,9 @@ final class PiggyBackerTest: XCTestCase {
         }
         
         // Then
+        try await Task.sleep(nanoseconds: 500_000_000)
+        let inflights = await sut.inFlights
+        XCTAssertEqual(inflights.count, 1)
         let (a, b) = try await (aTask, bTask)
         XCTAssertEqual(a, resultAString)
         XCTAssertEqual(b, resultAString)
