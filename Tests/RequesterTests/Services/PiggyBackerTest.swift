@@ -58,12 +58,13 @@ final class PiggyBackerTest: XCTestCase {
         async let aTask = try await sut.dispatch("same") { id in
             return Future.delayed(1, result: .success(resultAString))
         }
+        try await Task.sleep(nanoseconds: 100_000_000)
         async let bTask = try await sut.dispatch("same") { id in
             return Future.delayed(1, result: .success(resultBString))
         }
         
         // Then
-        try await Task.sleep(nanoseconds: 500_000_000)
+        try await Task.sleep(nanoseconds: 400_000_000)
         let inflights = await sut.inFlights
         XCTAssertEqual(inflights.count, 1)
         let (a, b) = try await (aTask, bTask)
