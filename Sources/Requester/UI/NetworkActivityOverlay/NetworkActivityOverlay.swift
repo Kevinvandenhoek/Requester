@@ -23,27 +23,31 @@ public struct NetworkActivityOverlay: View {
     private let disappearDelay: TimeInterval = 4
     
     public var body: some View {
-        VStack {
-            Spacer()
+        VStack(alignment: .trailing) {
             if store.showInlineActivity {
                 ForEach(items, id: \.key) { id, item in
-                    HStack {
-                        Spacer()
                         activityContent(item)
-                            .padding(.horizontal, 11)
+                            .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .background(SingleRoundedCapsule()
-                                .foregroundColor(Color(.secondarySystemBackground))
-                                .shadow(color: Color.black.opacity(0.1), radius: 5, y: 3)
-                            )
+                            .background {
+                                if #available(iOS 26.0, *) {
+                                    Capsule()
+                                        .fill(.ultraThinMaterial)
+                                        .glassEffect(in: .capsule)
+                                } else {
+                                    Capsule()
+                                        .foregroundColor(Color(.secondarySystemBackground))
+                                }
+                            }
                             .transition(.move(edge: .bottom))
-                            .animation(.easeInOut(duration: 0.2))
+                            .animation(.easeInOut(duration: 0.2), value: items.map({ $0.key }))
                             .matchedGeometryEffect(id: id, in: namespace)
                     }
-                }
             }
         }
-        .padding(.bottom, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        .padding(.bottom, 60)
+        .padding(.trailing, 10)
         .sheet(isPresented: $showActivityView) {
             NetworkActivityView()
                 .environmentObject(store)
@@ -58,19 +62,19 @@ private extension NetworkActivityOverlay {
     
     @ViewBuilder
     func activityContent(_ activity: NetworkActivityItem) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             if activity.completion == nil {
                 ProgressView()
                     .frame(width: 10, height: 10)
+                    .scaleEffect(0.8)
+                    .tint(activity.indicatorTextColor)
                     .padding(.trailing, 4)
+                    .foregroundStyle(Color.red)
             } else {
-                Circle()
-                    .foregroundColor(activity.indicatorColor)
-                    .frame(width: 5, height: 5)
-                    .padding(.leading, 2)
                 Text(activity.durationText)
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(activity.indicatorColor)
+                    .foregroundColor(activity.indicatorTextColor)
+                    .opacity(0.6)
                     .onAppear {
                         Task {
                             guard !hiddenIds.contains(activity.id) else { return }
@@ -79,8 +83,9 @@ private extension NetworkActivityOverlay {
                         }
                     }
             }
-            Text(activity.pathText)
+            Text(activity.name ?? activity.pathText)
                 .font(.system(size: 10, weight: .bold))
+                .foregroundColor(activity.indicatorTextColor)
         }
     }
     
@@ -151,3 +156,13 @@ private struct SingleRoundedCapsule: Shape {
         return path
     }
 }
+
+
+#if DEBUG
+struct NetworkActivityOverlay_Previews: PreviewProvider {
+    
+    static var previews: some View {
+        NetworkActivityOverlay(NetworkActivityStore.mock())
+    }
+}
+#endif
