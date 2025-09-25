@@ -25,7 +25,9 @@ public struct NetworkActivityView: View {
                                 Toggle("show inline activity", isOn: $store.showInlineActivity)
                                     .toggleStyle(.switch)
                             }
+                            #if compiler(>=6.2)
                             .sharedBackgroundVisibility(.hidden)
+                            #endif
                         }
                 } else {
                     networkActivityList()

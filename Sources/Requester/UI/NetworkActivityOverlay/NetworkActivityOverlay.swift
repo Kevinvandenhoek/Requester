@@ -30,6 +30,7 @@ public struct NetworkActivityOverlay: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background {
+                                #if compiler(>=6.2)
                                 if #available(iOS 26.0, *) {
                                     Capsule()
                                         .fill(.ultraThinMaterial)
@@ -38,6 +39,10 @@ public struct NetworkActivityOverlay: View {
                                     Capsule()
                                         .foregroundColor(Color(.secondarySystemBackground))
                                 }
+                                #else
+                                Capsule()
+                                    .foregroundColor(Color(.secondarySystemBackground))
+                                #endif
                             }
                             .transition(.move(edge: .bottom))
                             .animation(.easeInOut(duration: 0.2), value: items.map({ $0.key }))
