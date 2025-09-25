@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 
 struct JSONView: View {
+    
     let title: String?
     let data: Data
     let json: Any
@@ -199,7 +200,6 @@ struct JSONView_Previews: PreviewProvider {
     static var previews: some View {
         ScrollView {
             JSONView(data: try! JSONSerialization.data(withJSONObject: [json, json], options: [.prettyPrinted, .withoutEscapingSlashes]))
-                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
         }
     }
 }

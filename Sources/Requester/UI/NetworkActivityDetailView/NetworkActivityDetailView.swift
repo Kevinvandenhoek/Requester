@@ -11,6 +11,7 @@ import SwiftUI
 struct NetworkActivityDetailView: View {
     
     @EnvironmentObject var store: NetworkActivityStore
+    @Environment(\.colorScheme) var colorScheme
     
     let item: NetworkActivityItem
     
@@ -123,7 +124,7 @@ extension NetworkActivityDetailView {
                 }
             }
             .padding(.all, 8)
-            .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+            .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(colorScheme == .dark ? .systemGray5 : .systemGray6)))
             .padding(.top, 6)
         }
     }
@@ -145,7 +146,7 @@ extension NetworkActivityDetailView {
                 }
             }
             .padding(.all, 8)
-            .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+            .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(colorScheme == .dark ? .systemGray5 : .systemGray6)))
             .padding(.top, 6)
         }
     }
@@ -153,15 +154,6 @@ extension NetworkActivityDetailView {
     @ViewBuilder
     func errorSection(for error: Error) -> some View {
         DataView(title: "Error", value: error)
-//        if let data = deepJSONData(from: error) {
-//            JSONView(title: "Error", data: data)
-//                .padding(.all, 8)
-//                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
-//                .padding(.top, 6)
-//        } else {
-//            keyValue("Error type", String(describing: type(of: error)))
-//            keyValue("Error description", String(describing: error))
-//        }
     }
     
     @ViewBuilder
@@ -206,7 +198,7 @@ extension NetworkActivityDetailView {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.all, 8)
-            .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+            .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(colorScheme == .dark ? .systemGray5 : .systemGray6)))
             .padding(.top, 6)
         }
     }

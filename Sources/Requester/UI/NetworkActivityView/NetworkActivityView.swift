@@ -11,6 +11,7 @@ import SwiftUI
 public struct NetworkActivityView: View {
     
     @EnvironmentObject var store: NetworkActivityStore
+    @Environment(\.colorScheme) var colorScheme
     
     public init() { }
     
@@ -140,7 +141,7 @@ private extension NetworkActivityView {
                 .padding(.all, 5)
                 .background(
                     RoundedRectangle(cornerRadius: 3)
-                        .foregroundColor(Color(.systemGray6))
+                        .foregroundColor(Color(colorScheme == .dark ? .systemGray5 : .systemGray6))
                 )
             }
         }
