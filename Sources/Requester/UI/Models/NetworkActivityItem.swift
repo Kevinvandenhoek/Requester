@@ -79,6 +79,12 @@ extension NetworkActivityItem {
         return (components.scheme ?? "") + "://" + (components.host ?? "nil")
     }
     
+    var hostText: String? {
+        guard let url = request.url,
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return "nil" }
+        return components.host
+    }
+    
     var pathText: String {
         guard let url = request.url,
               let components = URLComponents(url: url, resolvingAgainstBaseURL: true) else { return "nil" }
@@ -100,8 +106,11 @@ extension NetworkActivityItem {
         }
     }
     
+    var failedSteps: [APIRequestingStep] {
+        associatedResults.compactMap({ $0.failedStep })
+    }
+    
     var issuesText: String {
-        let failedSteps = associatedResults.compactMap({ $0.failedStep })
         switch failedSteps.count {
         case 0:
             return "no processing issues"

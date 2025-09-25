@@ -118,10 +118,12 @@ private extension NetworkActivityView {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(idText(for: activity))
-                        .font(.system(size: 10))
-                        .foregroundColor(Color(.secondaryLabel))
-                        .padding(.leading, 5)
+                    if !activity.failedSteps.isEmpty {
+                            Text(activity.issuesText)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(activity.issuesColor)
+                            .multilineTextAlignment(.trailing)
+                    }
                     Spacer()
                     Text(timeAgoText(for: activity))
                         .font(.system(size: 10))
@@ -156,8 +158,12 @@ private extension NetworkActivityView {
                     Capsule()
                         .foregroundColor(activity.indicatorColor)
                         .frame(width: 3)
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        HStack(alignment: .top, spacing: 3) {
+                            Text(activity.methodText)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(Color.subtleText)
+                                .multilineTextAlignment(.leading)
                             Text(activity.name ?? activity.pathText)
                                 .font(.system(size: 12, weight: .bold))
                                 .foregroundColor(Color.text)
@@ -168,38 +174,34 @@ private extension NetworkActivityView {
                                 .foregroundColor(activity.statusColor)
                                 .multilineTextAlignment(.trailing)
                         }
-                        HStack(alignment: .top) {
-                            Text(activity.methodText)
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(Color.subtleText)
-                                .multilineTextAlignment(.leading)
-                            Spacer()
-                            Text(activity.issuesText)
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(activity.issuesColor)
-                                .multilineTextAlignment(.trailing)
+                        
+                        HStack(spacing: 0) {
+                            if let hostText = activity.hostText {
+                                Text(hostText)
+                                    .font(.system(size: 9, weight: .regular))
+                                    .foregroundColor(Color.text)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            if activity.name != nil {
+                                Text(" / \(activity.pathText)")
+                                    .font(.system(size: 9, weight: .regular))
+                                    .foregroundColor(Color.subtleText)
+                                    .multilineTextAlignment(.leading)
+                            }
                         }
-                        HStack(alignment: .top) {
-                            Text(activity.baseUrlText)
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(Color.subtleText)
-                                .multilineTextAlignment(.leading)
+                        
+                        HStack(spacing: 0) {
+                            if activity.duration != nil {
+                                Text(activity.durationText)
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(activity.durationColor)
+                                    .multilineTextAlignment(.trailing)
+                            }
+                            
                             Spacer()
-                            Text(activity.durationText)
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(activity.durationColor)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        HStack {
                             Text(dateFormatter.string(from: activity.date))
                                 .font(.system(size: 9, weight: .bold))
                                 .foregroundColor(Color.subtleText)
-                            Spacer()
-                            if let completion = activity.completion {
-                                Text(dateFormatter.string(from: completion))
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(Color.subtleText)
-                            }
                         }
                     }
                 }
@@ -220,7 +222,7 @@ struct NetworkActivityView_Previews: PreviewProvider {
 
 private let dateFormatter = {
     let formatter = DateFormatter()
-    formatter.dateFormat = "H:mm:ss.SSS"
+    formatter.dateFormat = "H:mm:ss"
     return formatter
 }()
 

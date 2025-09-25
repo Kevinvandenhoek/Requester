@@ -123,7 +123,7 @@ public enum APIRequestingStep: Hashable, Sendable {
 
 extension Dictionary where Key == APIRequestDispatchID, Value == NetworkActivityItem {
     
-    static let url = URL(string: "https://www.google.com/testing/arieboomsma/nogeenlangerpad/dsfijfdoiigfjod/dfsofdgjdfg?id=69&time=420")!
+    static let url = URL(string: "https://www.google.com/testing/arieboomsma?id=69&time=420")!
     
     static var stubbed: Self {
         return [
@@ -135,7 +135,7 @@ extension Dictionary where Key == APIRequestDispatchID, Value == NetworkActivity
             2: NetworkActivityItem(
                 URLRequest(url: url),
                 id: 2,
-                name: "Get items",
+                name: "Items",
                 state: .succeeded((
                     data: Data(),
                     response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
@@ -153,24 +153,24 @@ extension Dictionary where Key == APIRequestDispatchID, Value == NetworkActivity
                     )
                 ],
                 associatedFollowUps: [3],
-                completion: Date().addingTimeInterval(-5.1345398)
+                completion: Date().addingTimeInterval(5.1345398)
             ),
             3: NetworkActivityItem(
                 URLRequest(url: url),
                 id: 3,
-                name: "Get item detail",
+                name: "Item detail",
                 state: .succeeded((
                     data: Data(),
                     response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
                 )),
-                completion: Date().addingTimeInterval(-2.1345398)
+                completion: Date().addingTimeInterval(2.1345398)
             ),
             4: NetworkActivityItem(
                 URLRequest(url: url),
                 id: 4,
-                name: "Post update",
+                name: nil,
                 state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
-                completion: Date().addingTimeInterval(-1.1345398)
+                completion: Date().addingTimeInterval(1.1345398)
             )
         ]
     }
