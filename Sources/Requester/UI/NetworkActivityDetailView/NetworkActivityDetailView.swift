@@ -152,15 +152,16 @@ extension NetworkActivityDetailView {
     
     @ViewBuilder
     func errorSection(for error: Error) -> some View {
-        if let data = deepJSONData(from: error) {
-            JSONView(title: "Error", data: data)
-                .padding(.all, 8)
-                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
-                .padding(.top, 6)
-        } else {
-            keyValue("Error type", String(describing: type(of: error)))
-            keyValue("Error description", String(describing: error))
-        }
+        DataView(title: "Error", value: error)
+//        if let data = deepJSONData(from: error) {
+//            JSONView(title: "Error", data: data)
+//                .padding(.all, 8)
+//                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+//                .padding(.top, 6)
+//        } else {
+//            keyValue("Error type", String(describing: type(of: error)))
+//            keyValue("Error description", String(describing: error))
+//        }
     }
     
     @ViewBuilder
@@ -256,136 +257,4 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
     }
 }
 
-// MARK: - JSON helpers
-private func parseJSON(from data: Data) -> Any? {
-    try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
-}
-
-private func parseJSON(from string: String) -> Any? {
-    // try raw
-    if let d = string.data(using: .utf8), let obj = parseJSON(from: d) { return obj }
-    // try URL-decoded
-    if let un = string.removingPercentEncoding,
-       let d = un.data(using: .utf8),
-       let obj = parseJSON(from: d) { return obj }
-    // try unescaping common backslash-escaped quotes (e.g. "{\"a\":1}")
-    let unescaped = string
-        .replacingOccurrences(of: "\\\"", with: "\"")
-        .replacingOccurrences(of: "\\n", with: "\n")
-        .replacingOccurrences(of: "\\t", with: "\t")
-    if unescaped != string,
-       let d = unescaped.data(using: .utf8),
-       let obj = parseJSON(from: d) { return obj }
-    // try base64 → JSON
-    if let d = Data(base64Encoded: string),
-       let obj = parseJSON(from: d) { return obj }
-    return nil
-}
-
-/// Recursively convert ANY Swift value into a JSON-compatible Foundation object.
-/// - If a String contains JSON, it is parsed to JSON (recursively).
-/// - If Data contains JSON, it's parsed; otherwise it's base64.
-/// - Optionals unwrap; collections/dicts/structs/classes/enums are walked recursively.
-/// - Falls back to String(describing:) when nothing else fits.
-private func toJSONCompatibleDeep(_ value: Any, depth: Int = 0, maxDepth: Int = 6) -> Any? {
-    if depth > maxDepth { return String(describing: value) }
-
-    // Optionals
-    let mirror = Mirror(reflecting: value)
-    if mirror.displayStyle == .optional {
-        if let child = mirror.children.first {
-            return toJSONCompatibleDeep(child.value, depth: depth, maxDepth: maxDepth)
-        } else {
-            return NSNull()
-        }
-    }
-
-    // Primitives & bridged types
-    switch value {
-    case is NSNull: return NSNull()
-    case let s as String:
-        // If it *is* JSON, parse it. Otherwise keep the string.
-        if let parsed = parseJSON(from: s) {
-            return toJSONCompatibleDeep(parsed, depth: depth + 1, maxDepth: maxDepth)
-        }
-        return s
-    case let d as Data:
-        if let obj = parseJSON(from: d) {
-            return toJSONCompatibleDeep(obj, depth: depth + 1, maxDepth: maxDepth)
-        }
-        return d.base64EncodedString()
-    case let b as Bool: return b
-    case let n as NSNumber: return n
-    case let i as Int: return i
-    case let dbl as Double: return dbl
-    case let fl as Float: return fl
-    case let date as Date:
-        return ISO8601DateFormatter().string(from: date)
-    case let url as URL:
-        return url.absoluteString
-    default: break
-    }
-
-    // Already Foundation JSON containers
-    if JSONSerialization.isValidJSONObject(value) {
-        return value
-    }
-
-    // Collections
-    switch mirror.displayStyle {
-    case .collection, .set:
-        return mirror.children.compactMap {
-            toJSONCompatibleDeep($0.value, depth: depth + 1, maxDepth: maxDepth)
-        }
-    case .dictionary:
-        var out: [String: Any] = [:]
-        for child in mirror.children {
-            let pair = Mirror(reflecting: child.value).children.map(\.value)
-            guard pair.count == 2 else { continue }
-            let key = (pair[0] as? String) ?? String(describing: pair[0])
-            if let v = toJSONCompatibleDeep(pair[1], depth: depth + 1, maxDepth: maxDepth) {
-                out[key] = v
-            }
-        }
-        return out
-    case .struct, .class:
-        var out: [String: Any] = [:]
-        for child in mirror.children {
-            if let label = child.label,
-               let v = toJSONCompatibleDeep(child.value, depth: depth + 1, maxDepth: maxDepth) {
-                out[label] = v
-            }
-        }
-        // Annotate with type so it’s still readable in your viewer
-        out["_type"] = String(describing: type(of: value))
-        return out
-    case .enum:
-        var payload: [Any] = []
-        for child in mirror.children {
-            if let v = toJSONCompatibleDeep(child.value, depth: depth + 1, maxDepth: maxDepth) {
-                payload.append(v)
-            }
-        }
-        return ["_enum": String(describing: value), "associated": payload]
-    default:
-        break
-    }
-
-    // Fallback
-    return String(describing: value)
-}
-
-/// Try to obtain pretty JSON Data from any value (recursively).
-func deepJSONData(from value: Any) -> Data? {
-    if let d = value as? Data, parseJSON(from: d) != nil {
-        return d
-    }
-    let obj = toJSONCompatibleDeep(value) ?? "null"
-    guard JSONSerialization.isValidJSONObject(obj) else {
-        // Wrap non-JSON primitives in a string so JSONView can still render something
-        return try? JSONSerialization.data(withJSONObject: ["value": String(describing: obj)],
-                                           options: [.prettyPrinted, .sortedKeys])
-    }
-    return try? JSONSerialization.data(withJSONObject: obj, options: [.prettyPrinted, .sortedKeys])
-}
 #endif
