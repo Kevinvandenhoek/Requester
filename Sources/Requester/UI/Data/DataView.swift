@@ -92,12 +92,17 @@ private struct InspectorRow: View {
 
         VStack(alignment: .leading, spacing: 4) {
             Button {
-                if node.isExpandable { isExpanded.toggle() }
+                if node.isExpandable {
+                    withAnimation(.spring(duration: 0.2)) {
+                        isExpanded.toggle()
+                    }
+                }
             } label: {
                 HStack(alignment: .top, spacing: 4) {
                     if node.isExpandable {
-                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        Image(systemName: "chevron.right")
                             .resizable()
+                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 8, height: 8)
                             .padding(.top, 3.5)

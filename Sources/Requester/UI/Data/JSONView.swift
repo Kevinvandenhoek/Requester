@@ -13,7 +13,7 @@ struct JSONView: View {
     let data: Data
     let json: Any
     
-    init(title: String? = nil, data: Data) {
+    init(title: String? = "JSON", data: Data) {
         self.title = title
         self.data = data
         self.json = data.json as Any
@@ -106,13 +106,16 @@ private struct ExpandableView: View {
         VStack(alignment: .leading) {
             Button(action: {
                 if isExpandable() {
-                    isExpanded.toggle()
+                    withAnimation(.spring(duration: 0.2)) {
+                        isExpanded.toggle()
+                    }
                 }
             }) {
                 HStack(alignment: .top, spacing: 0) {
                     if isExpandable() {
-                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        Image(systemName: "chevron.right")
                             .resizable()
+                            .rotationEffect(.degrees(isExpanded ? 90 : 0))
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 8, height: 8)
                             .padding(.trailing, 3)
