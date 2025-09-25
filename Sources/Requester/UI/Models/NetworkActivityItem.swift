@@ -127,6 +127,21 @@ extension NetworkActivityItem {
         }
     }
     
+    var indicatorTextColor: Color {
+        if associatedResults.contains(where: { $0.failedStep != nil }) {
+            return Color.red
+        } else {
+            switch state {
+            case .failed:
+                return Color.red
+            case .inProgress:
+                return Color.blue
+            case .succeeded:
+                return Color(.label)
+            }
+        }
+    }
+    
     var issuesColor: Color {
         return associatedResults.contains(where: { $0.failedStep != nil })
             ? Color.red

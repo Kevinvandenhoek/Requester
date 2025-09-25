@@ -134,7 +134,7 @@ extension NetworkActivityDetailView {
             ZStack(alignment: .topLeading) {
                 if let json = data.json,
                    ((json as? [Any])?.isEmpty == false || (json as? [String: Any])?.isEmpty == false) {
-                    JSONView(data: data)
+                    JSONView(title: "JSON", data: data)
                 } else if let text = String(data: data, encoding: .utf8), !text.isEmpty {
                     Text(text)
                         .font(.system(size: 10))
@@ -152,8 +152,16 @@ extension NetworkActivityDetailView {
     
     @ViewBuilder
     func errorSection(for error: Error) -> some View {
-        keyValue("Error type", String(describing: type(of: error)))
-        keyValue("Error description", String(describing: error))
+        DataView(title: "Error", value: error)
+//        if let data = deepJSONData(from: error) {
+//            JSONView(title: "Error", data: data)
+//                .padding(.all, 8)
+//                .background(RoundedRectangle(cornerRadius: 4).foregroundColor(Color(.systemGray6)))
+//                .padding(.top, 6)
+//        } else {
+//            keyValue("Error type", String(describing: type(of: error)))
+//            keyValue("Error description", String(describing: error))
+//        }
     }
     
     @ViewBuilder
@@ -248,4 +256,5 @@ struct NetworkActivityDetailView_Previews: PreviewProvider {
         }
     }
 }
+
 #endif

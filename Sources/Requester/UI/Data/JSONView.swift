@@ -9,10 +9,12 @@ import Foundation
 import SwiftUI
 
 struct JSONView: View {
+    let title: String?
     let data: Data
     let json: Any
     
-    init(data: Data) {
+    init(title: String? = nil, data: Data) {
+        self.title = title
         self.data = data
         self.json = data.json as Any
     }
@@ -20,9 +22,11 @@ struct JSONView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top) {
-                Text("JSON")
-                    .font(.system(size: 24, weight: .bold))
-                Spacer()
+                if let title {
+                    Text(title)
+                        .font(.system(size: 24, weight: .bold))
+                    Spacer()
+                }
                 HStack {
                     Text("copy")
                         .font(.system(size: 12, weight: .bold))

@@ -118,3 +118,69 @@ public enum APIRequestingStep: Hashable, Sendable {
         }
     }
 }
+
+#if DEBUG
+
+extension Dictionary where Key == APIRequestDispatchID, Value == NetworkActivityItem {
+    
+    static let url = URL(string: "https://www.google.com/testing/arieboomsma/nogeenlangerpad/dsfijfdoiigfjod/dfsofdgjdfg?id=69&time=420")!
+    
+    static var stubbed: Self {
+        return [
+            1: NetworkActivityItem(
+                URLRequest(url: url),
+                id: 1,
+                name: "App init"
+            ),
+            2: NetworkActivityItem(
+                URLRequest(url: url),
+                id: 2,
+                name: "Get items",
+                state: .succeeded((
+                    data: Data(),
+                    response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
+                )),
+                associatedResults: [
+                    APIRequestingResult(
+                        request: APIRequestMock(),
+                        failedStep: .dispatching,
+                        error: APIError(type: .general)
+                    ),
+                    APIRequestingResult(
+                        request: APIRequestMock(),
+                        failedStep: nil,
+                        error: nil
+                    )
+                ],
+                associatedFollowUps: [3],
+                completion: Date().addingTimeInterval(-5.1345398)
+            ),
+            3: NetworkActivityItem(
+                URLRequest(url: url),
+                id: 3,
+                name: "Get item detail",
+                state: .succeeded((
+                    data: Data(),
+                    response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
+                )),
+                completion: Date().addingTimeInterval(-2.1345398)
+            ),
+            4: NetworkActivityItem(
+                URLRequest(url: url),
+                id: 4,
+                name: "Post update",
+                state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
+                completion: Date().addingTimeInterval(-1.1345398)
+            )
+        ]
+    }
+}
+
+extension NetworkActivityStore {
+    
+    static func mock(activity: [APIRequestDispatchID: NetworkActivityItem] = .stubbed) -> NetworkActivityStore {
+        return NetworkActivityStore(activity: activity)
+    }
+}
+
+#endif

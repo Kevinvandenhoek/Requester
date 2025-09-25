@@ -17,21 +17,23 @@ public struct NetworkActivityView: View {
     public var body: some View {
         NavigationView {
             if store.didSetup || !store.activity.isEmpty {
-                ScrollView {
-                    LazyVStack(spacing: 20) {
-                        ForEach(items, id: \.key) { _, value in
-                            view(for: value)
+                if #available(iOS 26, *) {
+                    networkActivityList()
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Toggle("show inline activity", isOn: $store.showInlineActivity)
+                                    .toggleStyle(.switch)
+                            }
+                            .sharedBackgroundVisibility(.hidden)
                         }
-                    }
-                    .padding(.horizontal, 14)
-                }
-                .background(Color(.systemBackground))
-                .navigationTitle("Network Activity")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Toggle("show inline activity", isOn: $store.showInlineActivity)
-                            .toggleStyle(SwitchToggleStyle())
-                    }
+                } else {
+                    networkActivityList()
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarTrailing) {
+                                Toggle("show inline activity", isOn: $store.showInlineActivity)
+                                    .toggleStyle(.switch)
+                            }
+                        }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 10) {
@@ -55,6 +57,19 @@ public struct NetworkActivityView: View {
 }
 
 private extension NetworkActivityView {
+    
+    func networkActivityList() -> some View {
+        ScrollView {
+            LazyVStack(spacing: 20) {
+                ForEach(items, id: \.key) { _, value in
+                    view(for: value)
+                }
+            }
+            .padding(.horizontal, 14)
+        }
+        .background(Color(.systemBackground))
+        .navigationTitle("Network Activity")
+    }
     
     func idText(for activity: NetworkActivityItem) -> String {
         let activities = [activity.id] + Array(activity
@@ -196,62 +211,9 @@ private extension NetworkActivityView {
 #if DEBUG
 struct NetworkActivityView_Previews: PreviewProvider {
     
-    static let url = URL(string: "https://www.google.com/testing/arieboomsma/nogeenlangerpad/dsfijfdoiigfjod/dfsofdgjdfg?id=69&time=420")!
-    
-    static let id1 = 1
-    static let id2 = 2
-    static let id3 = 3
-    static let id4 = 4
-    
     static var previews: some View {
         NetworkActivityView()
-            .environmentObject(NetworkActivityStore(activity: [
-                id1: NetworkActivityItem(
-                    URLRequest(url: url),
-                    id: id1,
-                    name: nil
-                ),
-                id2: NetworkActivityItem(
-                    URLRequest(url: url),
-                    id: id2,
-                    name: nil,
-                    state: .succeeded((
-                        data: Data(),
-                        response: HTTPURLResponse(url: url, statusCode: 304, httpVersion: nil, headerFields: [:])!
-                    )),
-                    associatedResults: [
-                        APIRequestingResult(
-                            request: APIRequestMock(),
-                            failedStep: .dispatching,
-                            error: APIError(type: .general)
-                        ),
-                        APIRequestingResult(
-                            request: APIRequestMock(),
-                            failedStep: nil,
-                            error: nil
-                        )
-                    ],
-                    associatedFollowUps: [id3],
-                    completion: Date().addingTimeInterval(-454.1345398)
-                ),
-                id3: NetworkActivityItem(
-                    URLRequest(url: url),
-                    id: id3,
-                    name: nil,
-                    state: .succeeded((
-                        data: Data(),
-                        response: HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: [:])!
-                    )),
-                    completion: Date().addingTimeInterval(-134.1345398)
-                ),
-                id4: NetworkActivityItem(
-                    URLRequest(url: url),
-                    id: id4,
-                    name: nil,
-                    state: .failed(URLSession.DataTaskPublisher.Failure(.badURL)),
-                    completion: Date().addingTimeInterval(-30.1345398)
-                )
-            ]))
+            .environmentObject(NetworkActivityStore.mock())
     }
 }
 #endif
